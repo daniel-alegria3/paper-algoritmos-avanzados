@@ -38,8 +38,8 @@
       rest: margin,
       // inside: margin + margin_side_ratio,
       // outside: margin - margin_side_ratio,
-      // inside: 3.81cm,
-      left: 3.81cm,
+      inside: 3.81cm,
+      // left: 3.81cm,
     ),
     // header: align(right + horizon)[
     //   _ #title _
