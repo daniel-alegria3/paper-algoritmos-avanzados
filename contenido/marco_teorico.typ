@@ -18,11 +18,7 @@ Destaca la estrecha relación que existe entre teoría, práctica, proceso de
 investigación, realidad, entorno, y revela las teorías y evidencias empíricas
 relacionadas con la investigación (estado del arte). La investigación puede iniciar una
 teoría nueva, reformar una existente o simplemente definir con más claridad, conceptos o
-variables ya existentes. En este punto solo se pone un listado de temas que serán su
-marco teórico, no se desarrolla, eso se hace cuando se haga la investigación.
-
-En este sentido lo que se espera es que el estudiante presente el conjunto de
-fundamentos teóricos que amparan su investigación.
+variables ya existentes.
 
 == Primer subtitulo
 Aquí debe llenar tu contenido
