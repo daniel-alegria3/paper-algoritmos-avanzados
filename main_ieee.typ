@@ -1,6 +1,7 @@
 #import "./charged-ieee/lib.typ": ieee
 #show: ieee.with(
-  title: [Algoritmos para Camino Mas Corto de Fuente Unica],
+  title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$ para la
+    planificación óptima de trayectos en redes de transporte público],
   // abstract: [
   // ],
   authors: (
@@ -9,15 +10,15 @@
       // department: [Co-Founder],
       // organization: [Typst GmbH],
       // location: [Berlin, Germany],
-      email: "215270@unsaac.edu.pe"
+      email: "215270@unsaac.edu.pe",
     ),
     (
       name: "Huahuachampi Hinojosa Zahid",
-      email: "200878@unsaac.edu.pe"
+      email: "200878@unsaac.edu.pe",
     ),
     (
       name: "Puma Potocino Jose Francisco",
-      email: "164248@unsaac.edu.pe"
+      email: "164248@unsaac.edu.pe",
     ),
   ),
   // index-terms: ("SSSP", "Dijkstra", "Overview", "Compilation"),
@@ -34,11 +35,11 @@
     (top: 0.7pt + black)
   },
   align: (x, y) => (
-    if x > 0 { center }
-    else { left }
-  )
+    if x > 0 { center } else { left }
+  ),
 )
 
 #show regex("---"): it => it.text.replace(" ", "")
 
 #include "main.typ"
+

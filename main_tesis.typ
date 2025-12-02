@@ -3,7 +3,8 @@
 
 #show: tesis.with(
   // course: [Algoritmos Avanzados],
-  title: [Algoritmos para Camino Mas Corto de Fuente Unica],
+  title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$ para
+    la planificación óptima de trayectos en redes de transporte público],
   orientator: [Raul Huillca Huallparimachi],
   date: none,
   authors: (

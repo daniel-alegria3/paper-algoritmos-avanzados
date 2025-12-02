@@ -6,7 +6,8 @@
   aspect-ratio: "16-9",
   footer: self => self.info.title,
   config-info(
-    title: [Algoritmos para Camino Mas Corto de Fuente Unica],
+    title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$
+      para la planificación óptima de trayectos en redes de transporte público],
     subtitle: [Docente: Raul Huillca Huallparimachi],
     author: [
       #smallcaps([Integrantes]):
