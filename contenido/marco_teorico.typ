@@ -1,5 +1,4 @@
 = Marco Teórico
----
 
 (En este apartado el estudiante debe presentar en forma breve los temas que se abordarán
 en el marco teórico. El marco teórico se desprende de las palabras clave y del titulo.

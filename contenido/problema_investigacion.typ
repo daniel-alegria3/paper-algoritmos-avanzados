@@ -1,5 +1,4 @@
 = Problema de Investigación
----
 
 Se espera que la descripción del problema sea amplia y detallada, se sugiere como mínimo
 tres páginas - según guía.

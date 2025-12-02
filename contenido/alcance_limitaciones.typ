@@ -1,5 +1,4 @@
 = Alcances y Limitaciones
----
 
 (Se recomienda presentar los alcances y limitaciones en forma de puntos, se espera una
 redacción clara y detallada)

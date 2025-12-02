@@ -1,5 +1,4 @@
 = Justificacion
----
 
 La justificación consiste en fundamentar la importancia del problema que aborda y la
 necesidad de realizar el trabajo práctico para hallar la solución al mismo.

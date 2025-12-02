@@ -1,5 +1,4 @@
 = Antecedentes
----
 
 En esta sección se va desde aspectos generales a aspectos específicos (como un embudo).
 No se olvide que es la primera parte que tiene contacto con el lector y que hará que

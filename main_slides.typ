@@ -27,6 +27,7 @@
     // logo: emoji.city,
   ),
   config-common(
+    receive-body-for-new-section-slide-fn: false,
     datetime-format: "[day]-[month]-[year]",
     // handout: true, // omit animations
     // show-notes-on-second-screen: right,
@@ -36,18 +37,6 @@
     // header-ascent: 0em,
     // footer-descent: 0em,
   ),
-  /*
-  config-methods(
-    init: (self: none, body) => {
-      show heading.where(level: 1): it => {
-        it 
-        text("---")
-      }
-
-      body
-    },
-  ),
-  */
 )
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 

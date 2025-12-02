@@ -1,5 +1,4 @@
 = Objetivos
----
 
 == Objetivo General
 El objetivo es un enunciado claro y preciso de lo que se persigue, debe responder a las

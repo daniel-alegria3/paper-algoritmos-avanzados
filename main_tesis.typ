@@ -7,16 +7,23 @@
   orientator: [Raul Huillca Huallparimachi],
   date: none,
   authors: (
-    (name: "Alegria Sallo Daniel Rodrigo", id: 215270),
-    (name: "Huahuachampi Hinojosa Zahid", id: 200878),
-    (name: "Puma Potocino Jose Francisco", id: 164248),
+    "Alegria Sallo Daniel Rodrigo",
+    "Huahuachampi Hinojosa Zahid",
+    "Puma Potocino Jose Francisco",
   ),
 )
 
 // ÍNDICE
-// =======================
+#set page(footer: context [
+  #h(1fr) #counter(page).display("I") #h(1fr)
+])
 #outline(title: "Índice General")
 #pagebreak()
 
+// CONTENIDO
+#counter(page).update(1)
+#set page(footer: context [
+  #h(1fr) #counter(page).display("1")
+])
 #include "main.typ"
 

@@ -7,7 +7,7 @@
   authors: (),
   doc,
 ) = {
-  let fontsize = 11pt
+  let fontsize = 12pt
 
   let margin = 2.54cm
   let margin_side_ratio = 2%
@@ -36,8 +36,10 @@
     paper: "a4",
     margin: (
       rest: margin,
-      inside: margin + margin_side_ratio,
-      outside: margin - margin_side_ratio,
+      // inside: margin + margin_side_ratio,
+      // outside: margin - margin_side_ratio,
+      // inside: 3.81cm,
+      left: 3.81cm,
     ),
     // header: align(right + horizon)[
     //   _ #title _
@@ -53,8 +55,9 @@
     region: "pe",
   )
   set par(
-    first-line-indent: 1.2em,
-    // spacing: 2em,
+    // first-line-indent: 1.2em,
+    first-line-indent: 1.27cm,
+    spacing: 1.5em,
     leading: 0.65em,
     justify: true,
   )
@@ -113,9 +116,9 @@
 
   //================================ {Caratula} ================================
   page(
-    margin: (
-      rest: margin + caratula_margin_ratio,
-    ),
+    // margin: (
+    //   rest: margin + caratula_margin_ratio,
+    // ),
   )[
     #place(
       float: true,
