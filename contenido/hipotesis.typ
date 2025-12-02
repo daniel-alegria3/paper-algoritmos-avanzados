@@ -1,0 +1,6 @@
+= Hipotesis
+---
+
+(Opcionalmente, una HIPÓTESIS de trabajo (QUE es lo que se deseas "probar") en caso de que la naturaleza del trabajo lo amerite).
+
+Texto para introducir hipótesis

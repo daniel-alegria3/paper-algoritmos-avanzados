@@ -1,0 +1,9 @@
+= Justificacion
+---
+
+La justificación consiste en fundamentar la importancia del problema que aborda y la
+necesidad de realizar el trabajo práctico para hallar la solución al mismo.
+
+La función principal es exponer las diferentes razones (impacto, beneficios, aportes
+teóricos, cambios o relevancias social) por las que es plausible llevar a cabo dicho
+trabajo - más información ver guía.

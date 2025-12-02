@@ -1,0 +1,19 @@
+= Objetivos
+---
+
+== Objetivo General
+El objetivo es un enunciado claro y preciso de lo que se persigue, debe responder a las
+preguntas ¿Qué? ¿ Para que? y ¿A través de que? (Se recomienda que el objetivo general
+este relacionado con el título)
+
+== Objetivos Específicos
+Los objetivos deben ser metas concretas que pueden alcanzarse o no, pero que debe ser
+posible verificar cuando evalué el trabajo práctico. Es muy común confundir los
+objetivos con las tareas o con metas a largo plazo, o con resultados concretos que son
+parte de la investigación y no con su mera consecuencia. (se recomienda que sean pocos
+objetivos específicos y que estén relacionados con los problemas específicos) (Se
+sugiere utilizar lista de verbos presentes en la guía)
+
+- Primer objetivo específico
+- Segundo objetivo específico
+- Tercer objetivo específico

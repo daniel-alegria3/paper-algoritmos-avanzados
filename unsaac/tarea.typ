@@ -1,21 +1,20 @@
+#import "utils.typ": fecha
+
 #let tarea(
-  course: none,
   title: none,
+  course: none,
   professor: none,
-  date: none,
   authors: (),
+  date: none,
   doc,
 ) = {
   let fontsize = 11pt
 
   let margin = 2.54cm
-  let margin_side_ratio = 0% // 2%
-  let caratula_margin_ratio = 0% // 2%
+  let margin_side_ratio = 2%
+  let caratula_margin_ratio = 2%
 
   let escudos_ratio = 70%
-
-  // Temp fix for 'lang: es' not working on datetime()
-  let months = ("Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre")
 
   //================================ {General} =================================
   set page(
@@ -39,7 +38,7 @@
     region: "pe",
   )
   set par(
-    first-line-indent: 0em, //1.2em,
+    first-line-indent: 1.2em,
     // spacing: 2em,
     leading: 0.65em,
     justify: true,
@@ -54,13 +53,10 @@
     level: 1
   ): set block(above: 1.4em)
 
-  // show heading.where(
-  //   level: 1
-  // ): set block(below: 1em)
-  
-  show heading.where(level: 3): set block(above: 1.75em, below: 1.25em)
-  show heading.where(level: 1): set block(below: 1.5em)
-  
+  show heading.where(
+    level: 1
+  ): set block(below: 1em)
+
   set list(
     indent: 1.2em,
     spacing: 0.85em,
@@ -112,10 +108,7 @@
       scope: "parent",
       clearance: 2em,
     )[
-      #set par(
-        first-line-indent: 0em,
-        leading: 1.5em,
-      )
+      #set par(first-line-indent: 0em)
 
       #text(fontsize*1.35)[
         UNIVERSIDAD NACIONAL DE SAN ANTONIO ABAD DEL CUSCO
@@ -177,65 +170,12 @@
       #v(1fr)
       // # NOTE: bottom is not what puts it near foot of page
       #text(fontsize*1.2)[
-        Perú \
-        #if date != none {
-          date
-        } else {
-          let today = datetime.today()
-          [ #months.at(today.month()-1) del #today.year() ]
-        }
+        Perú #if (date != none) {date} else {fecha(datetime.today())}
       ]
     ]
   ]
   pagebreak()
 
-  
-  set par(
-    leading: 1.5em,
-  )
-
   //============================= {Document Body} ==============================
   doc
 }
-
-//============================== {Other modules} ===============================
-#let src_block(title: none, content) = {
-  let stroke = black + 0.5pt
-  let radius = 5pt
-  show raw: set text(
-    font: "TeX Gyre Cursor",
-    ligatures: false,
-    size: 1em * 1.25,
-    spacing: 100%,
-  )
-  block(stroke: stroke, radius: radius, clip: true, fill: rgb("#f2f2f2"))[
-    #if title != none {
-        block(
-          stroke: stroke,
-          inset: 0.5em,
-          below: 0em,
-          radius: (top-left: radius, bottom-right: radius),
-          clip: true,
-          fill: rgb("#d8d8d8"),
-          title
-        )
-    }
-    #block(
-      width: 100%,
-      inset: (rest: 0.5em),
-      clip: true,
-      content
-    )
-  ]
-}
-
-/// This uses a hack, path handling may be improved in the future
-/// https://forum.typst.app/t/why-are-paths-always-relative-to-the-current-file/306/5
-#let src_file(..path, lang: "txt") = {
-  let filename = path.at(0)
-  src_block(
-    title: filename,
-    raw(read(..path), lang: lang)
-  )
-}
-

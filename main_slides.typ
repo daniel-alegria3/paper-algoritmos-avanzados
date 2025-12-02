@@ -36,6 +36,18 @@
     // header-ascent: 0em,
     // footer-descent: 0em,
   ),
+  /*
+  config-methods(
+    init: (self: none, body) => {
+      show heading.where(level: 1): it => {
+        it 
+        text("---")
+      }
+
+      body
+    },
+  ),
+  */
 )
 #set heading(numbering: numbly("{1}.", default: "1.1"))
 
