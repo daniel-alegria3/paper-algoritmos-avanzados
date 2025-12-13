@@ -50,7 +50,7 @@ masiva.
 
 == Trabajos Relacionados
 
-/* Daniel */
+/*** Daniel ***/
 === #estado_arte_seccion("ran2025")
 Este es el primer resultado que presenta un algoritmo determinista que rompe la cota de
 tiempo $O(m + n log n)$, alcanzando una complejidad temporal de $O(m log^(2/3)n)$.
@@ -144,9 +144,9 @@ SP2 destaca por superar de manera consistente a Dijkstra, con aceleraciones entr
 En general, los algoritmos muestran mejoras significativas y mantienen un buen
 comportamiento frente al crecimiento del tamaño de las instancias.
 
-/* Zaith */
-=== #estado_arte_seccion("bernstein2020")
 
+/*** Zaith ***/
+=== #estado_arte_seccion("bernstein2020")
 *Resumen:*
 Este trabajo aborda el problema del camino más corto desde una sola fuente (SSSP) en
 grafos dirigidos ponderados bajo el modelo decremental (solo eliminaciones de aristas).
@@ -252,7 +252,8 @@ El aporte redefine el estado del arte: demuestra que la eficiencia casi lineal p
 con pesos negativos puede lograrse con herramientas combinatorias accesibles, reduciendo
 la brecha entre teoría avanzada y aplicabilidad práctica.
 
-/* Jose */
+
+/*** Jose ***/
 === #estado_arte_seccion("anagreh2021")
 *El problema:* Algoritmos tradicionales de rutas más cortas revelan información privada
 (ubicaciones, estructura de mapas).
@@ -345,7 +346,7 @@ ventajas y desventajas de usar montones binarios y montones de Fibonacci.
   #grid(
     columns: (1fr, 1fr),
     gutter: 5pt,
-    image("../imgs/edge1.png"), image("../imgs/edge2.png"),
+    image("./imgs/edge1.png"), image("./imgs/edge2.png"),
   )
 ]
 
@@ -378,5 +379,5 @@ Los algoritmos existentes luchan con:
 - Balance entre complejidad computacional y de memoria
 
 #align(center)[
-  #image("../imgs/vmfb.png")
+  #image("./imgs/vmfb.png")
 ]
