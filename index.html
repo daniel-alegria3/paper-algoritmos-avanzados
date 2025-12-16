@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSSP Algorithm Visualizer</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <p id="loading-text">Loading...</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>SSSP Algorithm Visualizer</h1>
+            <p>Compare shortest path algorithms on real OpenStreetMap road networks</p>
+        </header>
+
+        <div class="main-content">
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-controls">
+                    <button id="select-region">Select Region</button>
+                    <button id="clear-selection">Clear</button>
+                    <span id="selection-hint" class="hint"></span>
+                </div>
+                <div class="legend">
+                    <span class="legend-item"><span class="legend-color" style="background:#5dade2"></span> Two-way</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#e67e22"></span> One-way</span>
+                    <span class="legend-item"><span class="legend-color" style="background:#27ae60"></span> Path</span>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="graph-info">
+                    <h3>Graph Info</h3>
+                    <div id="graph-stats" class="stats-box">
+                        <p>No graph generated</p>
+                    </div>
+                </div>
+
+                <div class="graph-options">
+                    <h3>Data Source</h3>
+                    <div class="option-row">
+                        <label>
+                            <input type="checkbox" id="use-random"> Use random graph
+                        </label>
+                    </div>
+                    <div id="random-options" style="display: none;">
+                        <div class="option-row">
+                            <label for="node-count">Nodes:</label>
+                            <input type="number" id="node-count" min="10" max="500" value="100">
+                        </div>
+                        <div class="option-row">
+                            <label for="edge-density">Density:</label>
+                            <input type="range" id="edge-density" min="1" max="10" value="3">
+                            <span id="edge-density-value">3</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="algorithm-selection">
+                    <h3>Algorithm</h3>
+                    <select id="algorithm-select">
+                        <option value="dijkstra">Dijkstra (Binary Heap)</option>
+                        <option value="ran2025">Ran et al. O(m log^(2/3) n)</option>
+                        <option value="compare">Compare All</option>
+                    </select>
+                </div>
+
+                <div class="node-selection">
+                    <h3>Source & Target</h3>
+                    <div class="node-inputs">
+                        <div class="node-input-group">
+                            <label for="source-node">Source:</label>
+                            <input type="text" id="source-node" placeholder="Select on map">
+                            <button id="pick-source" class="pick-btn" disabled title="Pick source on map">📍</button>
+                        </div>
+                        <div class="node-input-group">
+                            <label for="target-node">Target:</label>
+                            <input type="text" id="target-node" placeholder="Select on map">
+                            <button id="pick-target" class="pick-btn" disabled title="Pick target on map">🎯</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="run-algorithm" disabled>Run Algorithm</button>
+
+                <div class="results">
+                    <h3>Path Results</h3>
+                    <div id="path-display" class="result-box"></div>
+                </div>
+
+                <div class="performance">
+                    <h3>Performance Metrics</h3>
+                    <div id="performance-display" class="result-box"></div>
+                </div>
+
+                <div class="comparison" id="comparison-section" style="display: none;">
+                    <h3>Algorithm Comparison</h3>
+                    <div id="comparison-display" class="result-box"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="graph.js"></script>
+    <script src="algorithms.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
