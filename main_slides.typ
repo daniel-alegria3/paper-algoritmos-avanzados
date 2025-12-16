@@ -4,7 +4,7 @@
 
 #show: metropolis-theme.with(
   aspect-ratio: "16-9",
-  footer: self => self.info.title,
+  footer: self => [],
   config-info(
     title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$
       para la planificación óptima de trayectos en redes de transporte público],
@@ -39,8 +39,13 @@
     // footer-descent: 0em,
   ),
 )
+#set text(size: 19pt)
 #set heading(numbering: numbly("{1}.", default: "1.1"))
+#set grid(columns: 2)
 
 #title-slide()
 
 #include "main.typ"
+
+#pagebreak()
+#bibliography("refs.bib", title: "BIBLIOGRAFÍA")

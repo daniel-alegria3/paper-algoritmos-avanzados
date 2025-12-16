@@ -41,6 +41,7 @@ para la aplicación de algoritmos de optimización. En el contexto de esta inves
 el sistema se modela formalmente como un *grafo dirigido y ponderado*, denotado por la
 terna $G = (V, E, w)$.
 
+/*
 A continuación, se detallan los componentes de este modelo algebraico:
 
 + *Conjunto de Vértices ($V$):* Representa los puntos de interés discretos dentro de la
@@ -91,6 +92,7 @@ densos (donde $m approx n^2$), la ventaja de los algoritmos de complejidad subó
 diluiría; sin embargo, en la topología dispersa del transporte público, la reducción en
 el término logarítmico promete una optimización significativa en el tiempo de
 procesamiento de trayectorias.
+*/
 
 == Problema del Camino Más Corto con Fuente Única (SSSP)
 
@@ -133,6 +135,7 @@ negativos. Su funcionamiento se basa en una estrategia voraz (_greedy_) que mant
 conjunto $S$ de vértices cuya distancia final mínima desde la fuente ya ha sido
 determinada.
 
+/*
 === Mecanismo de Relajación
 El principio fundamental que gobierna la convergencia del algoritmo es la *relajación de
 aristas*. Para cada nodo $v$, se mantiene un atributo $d[v]$ que representa la cota
@@ -173,6 +176,7 @@ masivos y dispersos, incluso el término $log n$ asociado a $n$ puede ser signif
 La propuesta de comparar esta línea base contra algoritmos de complejidad
 $O(m log^(2/3) n)$ busca demostrar si la reducción en el exponente logarítmico se
 traduce en una ventaja tangible para la ingeniería de transporte a gran escala.
+*/
 
 == Algoritmos de Complejidad Subóptima y Avances Recientes
 

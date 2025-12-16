@@ -116,6 +116,7 @@ $O((m + n log log n) log^2 n log(n W))$ con alta probabilidad, y detecta ciclos
 negativos cuando existen.
 
 
+/*
 === #estado_arte_seccion("kumawat2021")
 Este estudio demuestra que el rendimiento varía entre los distintos algoritmos que
 resuelven variantes del problema shortest path (SPP).
@@ -381,3 +382,4 @@ Los algoritmos existentes luchan con:
 #align(center)[
   #image("./imgs/vmfb.png")
 ]
+*/

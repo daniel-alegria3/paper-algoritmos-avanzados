@@ -1,9 +1,17 @@
 #import "./charged-ieee/lib.typ": ieee
 #show: ieee.with(
-  title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$ para la
-    planificación óptima de trayectos en redes de transporte público],
-  // abstract: [
-  // ],
+  title: [Evaluación del rendimiento de Dijkstra y un algoritmo $O(m log^(2/3) n)$ para
+    la planificación óptima de trayectos en redes de transporte público],
+  abstract: [
+    This paper empirically evaluates the performance of Dijkstra's algorithm against a
+    novel $O(m log^(2/3) n)$ algorithm for single-source shortest path problems in
+    sparse graphs representing public transport networks. Using real geographic data
+    from Cusco, Peru, experimental results show that the new algorithm achieves up to
+    23.4% improvement in execution time for longer routes, while Dijkstra performs
+    better on shorter paths. The study identifies a breakeven point around 150-180
+    nodes, providing practical guidance for algorithm selection in transportation
+    applications.
+  ],
   authors: (
     (
       name: "Alegria Sallo Daniel Rodrigo",
@@ -39,7 +47,8 @@
   ),
 )
 
+#set grid(columns: 1)
 #show regex("---"): it => it.text.replace(" ", "")
 
 #include "main.typ"
-
+#bibliography("refs.bib", title: "BIBLIOGRAFÍA")

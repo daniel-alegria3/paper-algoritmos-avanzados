@@ -453,3 +453,13 @@ El análisis revela que existe un punto de equilibrio aproximadamente entre 20-2
 kilómetros de distancia o 150-180 nodos en el grafo, a partir del cual el algoritmo de
 Ran et al. comienza a superar consistentemente a Dijkstra. Por debajo de este umbral, el
 overhead del algoritmo avanzado supera sus beneficios.
+
+== Gráficos
+
+#grid(
+  gutter: 10pt,
+  image("./imgs/exp01.jpeg"),
+  image("./imgs/exp02.jpeg"),
+  image("./imgs/exp03.jpeg"),
+  image("./imgs/exp04.jpeg"),
+)

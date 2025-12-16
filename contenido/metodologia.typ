@@ -6,6 +6,10 @@ mínimos en escenarios controlados que simulan redes de transporte. A continuaci
 detallan los materiales, la arquitectura de software y el protocolo experimental
 utilizado.
 
+El codigo fuente de la implementacion del codigo esta en
+https://github.com/daniel-alegria3/paper-algoritmos-avanzados/tree/main/code y este se
+puede probar en vivo en https://daniel-alegria3.github.io/paper-algoritmos-avanzados/
+
 == Entorno Experimental (Hardware y Software)
 Dado que el rendimiento de los algoritmos de grafos es altamente dependiente de la
 arquitectura subyacente, se estableció un entorno de pruebas estandarizado para

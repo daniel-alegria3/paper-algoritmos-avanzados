@@ -26,5 +26,9 @@
 #set page(footer: context [
   #h(1fr) #counter(page).display("1")
 ])
+#set grid(columns: 2)
+
 #include "main.typ"
 
+#pagebreak()
+#bibliography("refs.bib", title: "BIBLIOGRAFÍA")
