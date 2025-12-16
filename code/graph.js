@@ -21,19 +21,19 @@ class Graph {
         }
     }
 
-    addEdge(fromId, toId, weight, wayId = null) {
+    addEdge(fromId, toId, weight, wayId = null, geometry = []) {
         if (this.nodes.has(fromId) && this.nodes.has(toId)) {
             const from = this.nodes.get(fromId);
             if (!from.edges.has(toId)) {
-                from.edges.set(toId, { weight, wayId });
+                from.edges.set(toId, { weight, wayId, geometry });
                 this.edgeCount++;
             }
         }
     }
 
-    addBidirectionalEdge(id1, id2, weight, wayId = null) {
-        this.addEdge(id1, id2, weight, wayId);
-        this.addEdge(id2, id1, weight, wayId);
+    addBidirectionalEdge(id1, id2, weight, wayId = null, geometry = []) {
+        this.addEdge(id1, id2, weight, wayId, geometry);
+        this.addEdge(id2, id1, weight, wayId, [...geometry].reverse());
     }
 
     getNode(id) {
@@ -50,6 +50,12 @@ class Graph {
         const node = this.nodes.get(fromId);
         if (!node || !node.edges.has(toId)) return Infinity;
         return node.edges.get(toId).weight;
+    }
+
+    getEdgeGeometry(fromId, toId) {
+        const node = this.nodes.get(fromId);
+        if (!node || !node.edges.has(toId)) return [];
+        return node.edges.get(toId).geometry || [];
     }
 
     getAllNodes() {
@@ -186,6 +192,7 @@ class Graph {
 
             // Create edges between consecutive intersection/endpoint nodes
             let lastIntersection = null;
+            let lastIntersectionIndex = 0;
             let accumulatedDistance = 0;
 
             for (let i = 0; i < wayNodes.length; i++) {
@@ -206,19 +213,26 @@ class Graph {
                         const fromId = lastIntersection.id;
                         const toId = node.id;
 
+                        // Collect intermediate geometry (excluding start/end nodes)
+                        const geometry = [];
+                        for (let j = lastIntersectionIndex + 1; j < i; j++) {
+                            geometry.push([wayNodes[j].lat, wayNodes[j].lng]);
+                        }
+
                         if (isOneway) {
                             if (isReversed) {
-                                graph.addEdge(toId, fromId, accumulatedDistance, way.id);
+                                graph.addEdge(toId, fromId, accumulatedDistance, way.id, [...geometry].reverse());
                             } else {
-                                graph.addEdge(fromId, toId, accumulatedDistance, way.id);
+                                graph.addEdge(fromId, toId, accumulatedDistance, way.id, geometry);
                             }
                             graph.oneWayEdges++;
                         } else {
-                            graph.addBidirectionalEdge(fromId, toId, accumulatedDistance, way.id);
+                            graph.addBidirectionalEdge(fromId, toId, accumulatedDistance, way.id, geometry);
                             graph.twoWayEdges++;
                         }
                     }
                     lastIntersection = node;
+                    lastIntersectionIndex = i;
                     accumulatedDistance = 0;
                 }
             }

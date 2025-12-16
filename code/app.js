@@ -655,10 +655,22 @@ class GraphVisualizer {
     visualizePath(path, color) {
         if (path.length < 2) return;
 
-        const latlngs = path.map(nodeId => {
+        // Build full path including intermediate geometry points
+        const latlngs = [];
+        for (let i = 0; i < path.length; i++) {
+            const nodeId = path[i];
             const node = this.graph.getNode(nodeId);
-            return [node.lat, node.lng];
-        });
+            latlngs.push([node.lat, node.lng]);
+
+            // Add intermediate geometry to next node
+            if (i < path.length - 1) {
+                const nextNodeId = path[i + 1];
+                const geometry = this.graph.getEdgeGeometry(nodeId, nextNodeId);
+                for (const point of geometry) {
+                    latlngs.push(point);
+                }
+            }
+        }
 
         // Main path line
         const polyline = L.polyline(latlngs, {
