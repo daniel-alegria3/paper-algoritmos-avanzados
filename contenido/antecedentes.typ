@@ -116,7 +116,6 @@ $O((m + n log log n) log^2 n log(n W))$ con alta probabilidad, y detecta ciclos
 negativos cuando existen.
 
 
-/*
 === #estado_arte_seccion("kumawat2021")
 Este estudio demuestra que el rendimiento varía entre los distintos algoritmos que
 resuelven variantes del problema shortest path (SPP).
@@ -128,6 +127,7 @@ Dijkstra, Bellman-Ford y enfoques híbridos basados en algoritmos genéticos y d
 de hormigas, evaluando métricas como tiempo y precisión.
 
 
+/*
 === #estado_arte_seccion("alves2020")
 Este trabajo también examina la variabilidad de desempeño entre diferentes algoritmos de
 SPP. Se introducen SP1, SP2 y ParSP2, que aprovechan información adicional sobre la
