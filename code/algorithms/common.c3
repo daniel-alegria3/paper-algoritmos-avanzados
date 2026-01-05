@@ -1,7 +1,8 @@
 module common;
 
-const int MAX_NODES = 10000000;
-const int MAX_EDGES = 20000000;
+const int MAX_NODES = 300000;
+const int MAX_EDGES = 700000;
+const int MAX_PQ_SIZE = 10000000;
 const float INFINITY_VAL = 1e9f;
 
 struct Edge {
@@ -11,7 +12,7 @@ struct Edge {
 }
 
 fn void pq_push(int* items, float* priorities, int* size, int item, float priority) {
-    if (*size >= 10000000) return;
+    if (*size >= MAX_PQ_SIZE) return;
 
     int idx = *size;
     items[idx] = item;

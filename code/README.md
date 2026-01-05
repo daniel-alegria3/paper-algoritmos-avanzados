@@ -25,9 +25,13 @@ Interactive visualization tool for comparing Single-Source Shortest Path algorit
 ### JavaScript (Web Interface)
 - `index.html` - Main HTML structure
 - `graph.js` - Graph data structure, MinHeap, PriorityQueue
-- `algorithms.js` - WASM algorithm interface and bridge
+- `algorithms.js` - Core WASM algorithm interface and coordination
 - `app.js` - Main application logic and UI
 - `styles.css` - Dark theme styling
+
+### Algorithm Hooks
+- `hooks/dijkstra.js` - Dijkstra-specific WASM setup, memory allocation, and execution
+- `hooks/ran2025.js` - Ran2025-specific WASM setup, memory allocation, and execution
 
 ### C3 / WebAssembly (High-Performance Implementations)
 - `algorithms/` - C3 implementations compiled to WebAssembly
