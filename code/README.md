@@ -22,11 +22,19 @@ Interactive visualization tool for comparing Single-Source Shortest Path algorit
 
 ## Files
 
+### JavaScript (Web Interface)
 - `index.html` - Main HTML structure
 - `graph.js` - Graph data structure, MinHeap, PriorityQueue
 - `algorithms.js` - Algorithm implementations with metrics
 - `app.js` - Main application logic and UI
 - `styles.css` - Dark theme styling
+
+### C3 / WebAssembly (High-Performance Implementations)
+- `algorithms/` - C3 implementations compiled to WebAssembly
+  - `dijkstra.c3` - Dijkstra algorithm (O((m + n) log n))
+  - `ran2025.c3` - Ran et al. (2025) algorithm (O(m log^(2/3) n))
+  - `Makefile` - Build configuration for WebAssembly compilation
+  - `README.md` - Detailed documentation for C3 implementations
 
 ## Adding New Algorithms
 

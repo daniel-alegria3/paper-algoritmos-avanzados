@@ -716,6 +716,13 @@ function formatBytes(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    new GraphVisualizer();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize WASM modules before creating the visualizer
+    try {
+        await initializeWasmModules();
+        new GraphVisualizer();
+    } catch (error) {
+        console.error('Failed to initialize WASM modules:', error);
+        alert('Failed to load algorithm modules. Please refresh the page.');
+    }
 });

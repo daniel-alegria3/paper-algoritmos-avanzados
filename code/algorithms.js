@@ -1,4 +1,4 @@
-// Shortest Path Algorithms with Performance Metrics
+// Shortest Path Algorithms with C3 WebAssembly Implementations
 
 class AlgorithmResult {
     constructor(algorithmName, complexity) {
@@ -18,247 +18,355 @@ class AlgorithmResult {
     }
 }
 
-// Standard Dijkstra's algorithm with binary heap
+// WASM module instances
+let dijkstraModule = null;
+let ran2025Module = null;
+
+// Initialize WASM modules
+async function initializeWasmModules() {
+    try {
+        // Load Dijkstra WASM
+        const dijkstraResponse = await fetch('algorithms/build/wasm/dijkstra.wasm');
+        const dijkstraBuffer = await dijkstraResponse.arrayBuffer();
+        dijkstraModule = await WebAssembly.instantiate(dijkstraBuffer);
+        console.log('Dijkstra exports:', Object.keys(dijkstraModule.instance.exports));
+
+        // Load Ran2025 WASM
+        const ran2025Response = await fetch('algorithms/build/wasm/ran2025.wasm');
+        const ran2025Buffer = await ran2025Response.arrayBuffer();
+        ran2025Module = await WebAssembly.instantiate(ran2025Buffer);
+        console.log('Ran2025 exports:', Object.keys(ran2025Module.instance.exports));
+
+        console.log('WASM modules loaded successfully');
+    } catch (error) {
+        console.error('Failed to load WASM modules:', error);
+        throw error;
+    }
+}
+
+// Helper: Create mapping from OSM node IDs to indices and build edge array with adjacency info
+function buildNodeMappingAndEdges(graph) {
+    const nodeIdToIndex = new Map();
+    const edges = [];
+    const adjacencyOffset = new Array(graph.nodeCount);
+    const adjacencyCount = new Array(graph.nodeCount);
+    let index = 0;
+    
+    // First pass: map all node IDs to indices
+    for (const nodeId of graph.nodes.keys()) {
+        nodeIdToIndex.set(nodeId, index);
+        index++;
+    }
+    
+    // Second pass: build edges using mapped indices and adjacency lists
+    let edgeIndex = 0;
+    for (const [fromId, node] of graph.nodes) {
+        const fromIdx = nodeIdToIndex.get(fromId);
+        adjacencyOffset[fromIdx] = edgeIndex;
+        adjacencyCount[fromIdx] = node.edges.size;
+        
+        for (const [toId, edgeData] of node.edges) {
+            const toIdx = nodeIdToIndex.get(toId);
+            edges.push({ from: fromIdx, to: toIdx, weight: edgeData.weight });
+            edgeIndex++;
+        }
+    }
+    
+    return { nodeIdToIndex, edges, adjacencyOffset, adjacencyCount };
+}
+
+// Helper: Allocate memory in WASM for edges and working arrays
+function allocateMemoryInWasm(wasmModule, edges, nodeCount, adjacencyOffset, adjacencyCount) {
+    const memory = wasmModule.instance.exports.memory;
+    const edgeSize = 12; // int(4) + int(4) + float(4) = 12 bytes
+    
+    let offset = 1000; // Start safe offset
+    
+    // Calculate required sizes
+    const edgesMemory = edges.length * edgeSize;
+    const adjacencyOffsetMemory = nodeCount * 4; // int array
+    const adjacencyCountMemory = nodeCount * 4; // int array
+    const distancesMemory = nodeCount * 4; // float
+    const previousMemory = nodeCount * 4; // int
+    const visitedMemory = nodeCount * 1; // bool
+    const pqItemsMemory = nodeCount * 4; // int
+    const pqPrioritiesMemory = nodeCount * 4; // float
+    const pathMemory = nodeCount * 4; // int
+    
+    const totalRequired = offset + edgesMemory + adjacencyOffsetMemory + adjacencyCountMemory + distancesMemory + previousMemory + visitedMemory + pqItemsMemory + pqPrioritiesMemory + pathMemory;
+    
+    // Grow memory if needed
+    const currentMemoryPages = memory.buffer.byteLength / 65536;
+    const requiredPages = Math.ceil(totalRequired / 65536);
+    if (requiredPages > currentMemoryPages) {
+        memory.grow(requiredPages - currentMemoryPages);
+    }
+    
+    const buffer = new DataView(memory.buffer);
+    
+    // Write edges
+    const edgesOffset = offset;
+    for (let i = 0; i < edges.length; i++) {
+        const edgeOffset = edgesOffset + i * edgeSize;
+        buffer.setInt32(edgeOffset, edges[i].from, true);
+        buffer.setInt32(edgeOffset + 4, edges[i].to, true);
+        buffer.setFloat32(edgeOffset + 8, edges[i].weight, true);
+    }
+    
+    // Write adjacency arrays
+    const adjacencyOffsetWasmOffset = edgesOffset + edgesMemory;
+    const adjacencyCountWasmOffset = adjacencyOffsetWasmOffset + adjacencyOffsetMemory;
+    
+    for (let i = 0; i < nodeCount; i++) {
+        buffer.setInt32(adjacencyOffsetWasmOffset + i * 4, adjacencyOffset[i], true);
+        buffer.setInt32(adjacencyCountWasmOffset + i * 4, adjacencyCount[i], true);
+    }
+    
+    // Calculate offsets for working arrays
+    const distancesOffset = adjacencyCountWasmOffset + adjacencyCountMemory;
+    const previousOffset = distancesOffset + distancesMemory;
+    const visitedOffset = previousOffset + previousMemory;
+    const pqItemsOffset = visitedOffset + visitedMemory;
+    const pqPrioritiesOffset = pqItemsOffset + pqItemsMemory;
+    const pathOffset = pqPrioritiesOffset + pqPrioritiesMemory;
+    
+    // Initialize arrays to zero
+    for (let i = 0; i < distancesMemory; i += 4) {
+        buffer.setInt32(distancesOffset + i, 0, true);
+    }
+    for (let i = 0; i < previousMemory; i += 4) {
+        buffer.setInt32(previousOffset + i, 0, true);
+    }
+    for (let i = 0; i < visitedMemory; i++) {
+        buffer.setUint8(visitedOffset + i, 0);
+    }
+    
+    return { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset };
+}
+
+// Helper: Read result and path from WASM memory
+function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount) {
+    const memory = wasmModule.instance.exports.memory;
+    const buffer = new DataView(memory.buffer);
+    
+    try {
+        // Read output values
+        const distance = buffer.getFloat32(outDistanceOffset, true);
+        
+        // Read metrics struct (5 ints)
+        const metrics = {
+            relaxations: buffer.getInt32(outMetricsOffset, true),
+            heapOperations: buffer.getInt32(outMetricsOffset + 4, true),
+            nodesVisited: buffer.getInt32(outMetricsOffset + 8, true),
+            edgesExamined: buffer.getInt32(outMetricsOffset + 12, true),
+            recursiveCalls: buffer.getInt32(outMetricsOffset + 16, true),
+            memoryEstimate: buffer.getInt32(outMetricsOffset + 20, true)
+        };
+        
+        // Read path array
+        const path = [];
+        const maxPathLength = Math.min(pathLength, nodeCount);
+        for (let i = 0; i < maxPathLength; i++) {
+            path.push(buffer.getInt32(pathOffset + i * 4, true));
+        }
+        
+        return { distance, pathLength, path, metrics };
+    } catch (error) {
+        console.error('Error reading result from WASM memory:', error);
+        return {
+            distance: Infinity,
+            pathLength: 0,
+            path: [],
+            metrics: {
+                relaxations: 0,
+                heapOperations: 0,
+                nodesVisited: 0,
+                edgesExamined: 0,
+                recursiveCalls: 0,
+                memoryEstimate: 0
+            }
+        };
+    }
+}
+
+// Dijkstra using C3 WebAssembly
 function dijkstra(graph, source, target) {
     const result = new AlgorithmResult('Dijkstra (Binary Heap)', 'O((m + n) log n)');
-    const startTime = performance.now();
-
-    const distances = new Map();
-    const previous = new Map();
-    const visited = new Set();
-    const pq = new PriorityQueue();
-
-    for (const nodeId of graph.getAllNodes()) {
-        distances.set(nodeId, nodeId === source ? 0 : Infinity);
+    
+    if (!dijkstraModule) {
+        throw new Error('Dijkstra WASM module not loaded');
     }
-
-    pq.push(source, 0);
-    result.metrics.heapOperations++;
-
-    while (!pq.isEmpty()) {
-        const { item: current, priority: currentDist } = pq.pop();
-        result.metrics.heapOperations++;
-
-        if (visited.has(current)) continue;
-        visited.add(current);
-        result.metrics.nodesVisited++;
-
-        if (current === target) break;
-
-        if (currentDist > distances.get(current)) continue;
-
-        for (const [neighbor, weight] of graph.getNeighbors(current)) {
-            result.metrics.edgesExamined++;
-            const newDist = distances.get(current) + weight;
-
-            if (newDist < distances.get(neighbor)) {
-                distances.set(neighbor, newDist);
-                previous.set(neighbor, current);
-                pq.push(neighbor, newDist);
-                result.metrics.heapOperations++;
-                result.metrics.relaxations++;
-            }
+    
+    try {
+        // Build node mapping and edges (not counted in execution time)
+        const { nodeIdToIndex, edges, adjacencyOffset, adjacencyCount } = buildNodeMappingAndEdges(graph);
+        const nodeCount = graph.nodeCount;
+        const edgeCount = edges.length;
+        
+        // Map source and target to indices
+        const sourceIdx = nodeIdToIndex.get(source);
+        const targetIdx = nodeIdToIndex.get(target);
+        
+        if (sourceIdx === undefined || targetIdx === undefined) {
+            throw new Error(`Invalid source or target node ID`);
         }
+        
+        console.log(`Running Dijkstra with ${nodeCount} nodes, ${edgeCount} edges`);
+        
+        // Allocate memory (not counted in execution time)
+        const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
+            = allocateMemoryInWasm(dijkstraModule, edges, nodeCount, adjacencyOffset, adjacencyCount);
+        
+        // Allocate output parameter locations
+        const outDistanceOffset = pathOffset + nodeCount * 4;
+        const outMetricsOffset = outDistanceOffset + 4;
+        const pathLengthOffset = outMetricsOffset + 24;
+        
+        const memory = dijkstraModule.instance.exports.memory;
+        const buffer = new DataView(memory.buffer);
+        buffer.setInt32(pathLengthOffset, 0, true);
+        
+        // Start timer just before WASM execution
+        const startTime = performance.now();
+        
+        // Call WASM function
+        const dijkstraExecute = dijkstraModule.instance.exports.dijkstra__dijkstra_execute;
+        
+        dijkstraExecute(
+            nodeCount,
+            edgeCount,
+            edgesOffset,           // Pointer to edges
+            sourceIdx,
+            targetIdx,
+            distancesOffset,       // Pointer to distances
+            previousOffset,        // Pointer to previous
+            visitedOffset,         // Pointer to visited
+            adjacencyOffsetWasmOffset,    // Pointer to adjacency_offset
+            adjacencyCountWasmOffset,     // Pointer to adjacency_count
+            pqItemsOffset,         // Pointer to pq_items
+            pqPrioritiesOffset,    // Pointer to pq_priorities
+            pathOffset,            // Pointer to path
+            pathLengthOffset,      // Pointer to pathLength
+            outDistanceOffset,     // Pointer to outDistance
+            outMetricsOffset       // Pointer to outMetrics
+        );
+        
+        const endTime = performance.now();
+        
+        // Read path length
+        const pathLength = buffer.getInt32(pathLengthOffset, true);
+        
+        // Read result from WASM memory
+        const wasmResult = readResultFromWasm(dijkstraModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
+        
+        // Map path indices back to original node IDs (not counted in execution time)
+        const indexToNodeId = new Map([...nodeIdToIndex].map(([id, idx]) => [idx, id]));
+        const mappedPath = wasmResult.path.map(idx => indexToNodeId.get(idx));
+        
+        result.path = mappedPath;
+        result.distance = wasmResult.distance;
+        result.metrics = wasmResult.metrics;
+        result.executionTime = endTime - startTime;
+        
+        console.log(`Dijkstra result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);
+        
+    } catch (error) {
+        console.error('Error in dijkstra WASM call:', error);
+        result.distance = Infinity;
+        result.path = [];
+        result.executionTime = 0;
     }
-
-    const endTime = performance.now();
-    result.executionTime = endTime - startTime;
-
-    result.path = reconstructPath(previous, source, target);
-    result.distance = distances.get(target);
-    result.metrics.memoryEstimate = estimateMemory(distances.size, previous.size, pq.size());
-
+    
     return result;
 }
 
-// Ran et al. O(m log^(2/3) n) algorithm simulation
-// This implements a divide-and-conquer approach with frontier reduction
+// Ran et al. 2025 using C3 WebAssembly
 function ran2025Algorithm(graph, source, target) {
     const result = new AlgorithmResult('Ran et al. (2025)', 'O(m log^(2/3) n)');
-    const startTime = performance.now();
-
-    const n = graph.nodeCount;
-    const m = graph.edgeCount;
-
-    const distances = new Map();
-    const previous = new Map();
-    const visited = new Set();
-
-    for (const nodeId of graph.getAllNodes()) {
-        distances.set(nodeId, nodeId === source ? 0 : Infinity);
+    
+    if (!ran2025Module) {
+        throw new Error('Ran2025 WASM module not loaded');
     }
-
-    // Calculate the bucket size based on log^(2/3) n factor
-    const logFactor = Math.pow(Math.log2(Math.max(n, 2)), 2 / 3);
-    const bucketSize = Math.max(1, Math.ceil(n / logFactor));
-
-    // Bounded Multi-Source Shortest Path simulation
-    function bmssp(sources, bound, depth = 0) {
-        result.metrics.recursiveCalls++;
-
-        if (sources.size === 0 || depth > Math.log2(n)) return;
-
-        // Process nodes in buckets (frontier reduction)
-        const frontier = new PriorityQueue();
-        const localVisited = new Set();
-
-        for (const s of sources) {
-            if (!visited.has(s)) {
-                frontier.push(s, distances.get(s));
-                result.metrics.heapOperations++;
-            }
+    
+    try {
+        // Build node mapping and edges (not counted in execution time)
+        const { nodeIdToIndex, edges, adjacencyOffset, adjacencyCount } = buildNodeMappingAndEdges(graph);
+        const nodeCount = graph.nodeCount;
+        const edgeCount = edges.length;
+        
+        // Map source and target to indices
+        const sourceIdx = nodeIdToIndex.get(source);
+        const targetIdx = nodeIdToIndex.get(target);
+        
+        if (sourceIdx === undefined || targetIdx === undefined) {
+            throw new Error(`Invalid source or target node ID`);
         }
-
-        let processed = 0;
-        const nextSources = new Set();
-
-        while (!frontier.isEmpty() && processed < bucketSize) {
-            const { item: current, priority: currentDist } = frontier.pop();
-            result.metrics.heapOperations++;
-
-            if (localVisited.has(current)) continue;
-            localVisited.add(current);
-            visited.add(current);
-            result.metrics.nodesVisited++;
-            processed++;
-
-            if (current === target) continue;
-
-            const neighbors = graph.getNeighbors(current);
-
-            // Pivot selection: sort neighbors and select subset
-            const pivotCount = Math.max(1, Math.ceil(neighbors.length / logFactor));
-            neighbors.sort((a, b) => a[1] - b[1]);
-            const selectedNeighbors = neighbors.slice(0, Math.min(pivotCount * 2, neighbors.length));
-
-            for (const [neighbor, weight] of selectedNeighbors) {
-                result.metrics.edgesExamined++;
-                const newDist = distances.get(current) + weight;
-
-                if (newDist < distances.get(neighbor) && newDist <= bound) {
-                    distances.set(neighbor, newDist);
-                    previous.set(neighbor, current);
-                    result.metrics.relaxations++;
-
-                    if (!visited.has(neighbor)) {
-                        nextSources.add(neighbor);
-                        frontier.push(neighbor, newDist);
-                        result.metrics.heapOperations++;
-                    }
-                }
-            }
-
-            // Process remaining neighbors with reduced priority
-            for (let i = pivotCount * 2; i < neighbors.length; i++) {
-                const [neighbor, weight] = neighbors[i];
-                result.metrics.edgesExamined++;
-                const newDist = distances.get(current) + weight;
-
-                if (newDist < distances.get(neighbor) && newDist <= bound) {
-                    distances.set(neighbor, newDist);
-                    previous.set(neighbor, current);
-                    result.metrics.relaxations++;
-                    nextSources.add(neighbor);
-                }
-            }
-        }
-
-        // Add remaining unprocessed frontier nodes
-        while (!frontier.isEmpty()) {
-            const { item } = frontier.pop();
-            if (!visited.has(item)) {
-                nextSources.add(item);
-            }
-        }
-
-        // Recursive call with new frontier
-        if (nextSources.size > 0 && !visited.has(target)) {
-            const newBound = bound * 2;
-            bmssp(nextSources, newBound, depth + 1);
-        }
+        
+        console.log(`Running Ran2025 with ${nodeCount} nodes, ${edgeCount} edges`);
+        
+        // Allocate memory (not counted in execution time)
+        const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
+            = allocateMemoryInWasm(ran2025Module, edges, nodeCount, adjacencyOffset, adjacencyCount);
+        
+        // Allocate output parameter locations
+        const outDistanceOffset = pathOffset + nodeCount * 4;
+        const outMetricsOffset = outDistanceOffset + 4;
+        const pathLengthOffset = outMetricsOffset + 28;  // 7 ints for metrics
+        
+        const memory = ran2025Module.instance.exports.memory;
+        const buffer = new DataView(memory.buffer);
+        buffer.setInt32(pathLengthOffset, 0, true);
+        
+        // Start timer just before WASM execution
+        const startTime = performance.now();
+        
+        // Call WASM function
+        const ran2025Execute = ran2025Module.instance.exports.ran2025__ran2025_execute;
+        
+        ran2025Execute(
+            nodeCount,
+            edgeCount,
+            edgesOffset,
+            sourceIdx,
+            targetIdx,
+            distancesOffset,
+            previousOffset,
+            visitedOffset,
+            pqItemsOffset,
+            pqPrioritiesOffset,
+            pathOffset,
+            pathLengthOffset,
+            outDistanceOffset,
+            outMetricsOffset
+        );
+        
+        const endTime = performance.now();
+        
+        // Read path length
+        const pathLength = buffer.getInt32(pathLengthOffset, true);
+        
+        // Read result from WASM memory
+        const wasmResult = readResultFromWasm(ran2025Module, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
+        
+        // Map path indices back to original node IDs (not counted in execution time)
+        const indexToNodeId = new Map([...nodeIdToIndex].map(([id, idx]) => [idx, id]));
+        const mappedPath = wasmResult.path.map(idx => indexToNodeId.get(idx));
+        
+        result.path = mappedPath;
+        result.distance = wasmResult.distance;
+        result.metrics = wasmResult.metrics;
+        result.executionTime = endTime - startTime;
+        
+        console.log(`Ran2025 result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);
+        
+    } catch (error) {
+        console.error('Error in ran2025 WASM call:', error);
+        result.distance = Infinity;
+        result.path = [];
+        result.executionTime = 0;
     }
-
-    // Initialize with source
-    const initialSources = new Set([source]);
-    const initialBound = estimateInitialBound(graph, source, target);
-
-    bmssp(initialSources, initialBound);
-
-    // Fallback: if target not reached, run standard relaxation on remaining
-    if (!visited.has(target) && distances.get(target) === Infinity) {
-        const pq = new PriorityQueue();
-        for (const [nodeId, dist] of distances) {
-            if (dist < Infinity && !visited.has(nodeId)) {
-                pq.push(nodeId, dist);
-            }
-        }
-
-        while (!pq.isEmpty() && !visited.has(target)) {
-            const { item: current } = pq.pop();
-            result.metrics.heapOperations++;
-
-            if (visited.has(current)) continue;
-            visited.add(current);
-            result.metrics.nodesVisited++;
-
-            for (const [neighbor, weight] of graph.getNeighbors(current)) {
-                result.metrics.edgesExamined++;
-                const newDist = distances.get(current) + weight;
-
-                if (newDist < distances.get(neighbor)) {
-                    distances.set(neighbor, newDist);
-                    previous.set(neighbor, current);
-                    result.metrics.relaxations++;
-                    pq.push(neighbor, newDist);
-                    result.metrics.heapOperations++;
-                }
-            }
-        }
-    }
-
-    const endTime = performance.now();
-    result.executionTime = endTime - startTime;
-
-    result.path = reconstructPath(previous, source, target);
-    result.distance = distances.get(target);
-    result.metrics.memoryEstimate = estimateMemory(distances.size, previous.size, 0);
-
+    
     return result;
-}
-
-// Helper: Estimate initial bound based on Euclidean distance
-function estimateInitialBound(graph, source, target) {
-    const sourceNode = graph.getNode(source);
-    const targetNode = graph.getNode(target);
-    if (!sourceNode || !targetNode) return Infinity;
-    return Graph.distance(sourceNode, targetNode) * 2;
-}
-
-// Helper: Reconstruct path from previous map
-function reconstructPath(previous, source, target) {
-    const path = [];
-    let current = target;
-    const visited = new Set();
-
-    while (current !== undefined && !visited.has(current)) {
-        visited.add(current);
-        path.unshift(current);
-        if (current === source) break;
-        current = previous.get(current);
-    }
-
-    if (path.length === 0 || path[0] !== source) {
-        return [];
-    }
-
-    return path;
-}
-
-// Helper: Estimate memory usage in bytes
-function estimateMemory(distancesSize, previousSize, queueSize) {
-    const mapEntrySize = 24;
-    const numberSize = 8;
-    return (distancesSize + previousSize) * (mapEntrySize + numberSize) + queueSize * 32;
 }
 
 // Algorithm registry
