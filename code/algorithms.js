@@ -74,25 +74,31 @@ function allocateMemoryInWasm(wasmModule, edges, nodeCount, adjacencyOffset, adj
     
     let offset = 1000; // Start safe offset
     
-    // Calculate required sizes
+    // Validate inputs
+    if (nodeCount <= 0 || edges.length < 0) {
+        throw new Error(`Invalid nodeCount (${nodeCount}) or edges length (${edges.length})`);
+    }
+    
+    // Calculate required sizes (with extra space for algorithm working memory)
     const edgesMemory = edges.length * edgeSize;
     const adjacencyOffsetMemory = nodeCount * 4; // int array
     const adjacencyCountMemory = nodeCount * 4; // int array
-    const distancesMemory = nodeCount * 4; // float
-    const previousMemory = nodeCount * 4; // int
-    const visitedMemory = nodeCount * 1; // bool
-    const pqItemsMemory = nodeCount * 4; // int
-    const pqPrioritiesMemory = nodeCount * 4; // float
-    const pathMemory = nodeCount * 4; // int
+    const distancesMemory = nodeCount * 8; // float (doubled for safety)
+    const previousMemory = nodeCount * 8; // int (doubled for safety)
+    const visitedMemory = nodeCount * 4; // bool (quadrupled for safety)
+    const pqItemsMemory = nodeCount * 8; // int (doubled for safety)
+    const pqPrioritiesMemory = nodeCount * 8; // float (doubled for safety)
+    const pathMemory = nodeCount * 16; // int array (allocate more for longer paths)
     
     const totalRequired = offset + edgesMemory + adjacencyOffsetMemory + adjacencyCountMemory + distancesMemory + previousMemory + visitedMemory + pqItemsMemory + pqPrioritiesMemory + pathMemory;
     
-    // Grow memory if needed
+    // Grow memory if needed (with safety margin of 2x)
     const currentMemoryPages = memory.buffer.byteLength / 65536;
-    const requiredPages = Math.ceil(totalRequired / 65536);
+    const requiredPages = Math.ceil((totalRequired * 2) / 65536);
     if (requiredPages > currentMemoryPages) {
         memory.grow(requiredPages - currentMemoryPages);
     }
+    console.log(`Memory: current=${currentMemoryPages} pages, required=${requiredPages} pages, totalRequired=${totalRequired} bytes`);
     
     const buffer = new DataView(memory.buffer);
     
@@ -147,8 +153,7 @@ function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffse
         
         // Read path array
         const path = [];
-        const maxPathLength = Math.min(pathLength, nodeCount);
-        for (let i = 0; i < maxPathLength; i++) {
+        for (let i = 0; i < pathLength; i++) {
             path.push(buffer.getInt32(pathOffset + i * 4, true));
         }
         
@@ -191,8 +196,8 @@ function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexit
         const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
             = allocateMemoryInWasm(wasmModule, edges, nodeCount, adjacencyOffset, adjacencyCount);
         
-        // Allocate output parameter locations
-        const outDistanceOffset = pathOffset + nodeCount * 4;
+        // Allocate output parameter locations (must match pathMemory size in allocateMemoryInWasm)
+        const outDistanceOffset = pathOffset + nodeCount * 16;
         const pathLengthOffset = outDistanceOffset + 4;
         
         const memory = wasmModule.instance.exports.memory;

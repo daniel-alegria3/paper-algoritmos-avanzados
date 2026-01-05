@@ -70,7 +70,7 @@ fn void dijkstra_execute(
         int current = target;
         int idx = 0;
 
-        while (current >= 0 && idx < 100000) {
+        while (current >= 0 && idx < nodeCount) {
             pq_items[idx] = current;
             idx++;
             if (current == source) break;

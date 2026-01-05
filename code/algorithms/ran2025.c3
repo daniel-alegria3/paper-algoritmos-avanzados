@@ -70,17 +70,19 @@ fn void ran2025_execute(
         int current = target;
         int idx = 0;
 
-        while (current >= 0 && idx < 100000) {
-            pq_items[idx] = current;
+        while (current >= 0 && idx < nodeCount) {
+            path[idx] = current;
             idx++;
             if (current == source) break;
             current = previous[current];
         }
 
-        // Reverse and copy
+        // Reverse path in place
         *pathLength = idx;
-        for (int i = 0; i < idx; i++) {
-            path[i] = pq_items[idx - 1 - i];
+        for (int i = 0; i < idx / 2; i++) {
+            int temp = path[i];
+            path[i] = path[idx - 1 - i];
+            path[idx - 1 - i] = temp;
         }
     }
 }
