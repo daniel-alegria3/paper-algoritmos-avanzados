@@ -17,16 +17,16 @@ let ran2025Module = null;
 // Initialize WASM modules
 async function initializeWasmModules() {
     try {
-        // Load Dijkstra WASM
-        const dijkstraResponse = await fetch('algorithms/build/wasm/dijkstra.wasm');
-        const dijkstraBuffer = await dijkstraResponse.arrayBuffer();
-        dijkstraModule = await WebAssembly.instantiate(dijkstraBuffer);
+        // Load Dijkstra WASM using instantiateStreaming (avoids source map errors)
+        dijkstraModule = await WebAssembly.instantiateStreaming(
+            fetch('algorithms/build/wasm/dijkstra.wasm')
+        );
         console.log('Dijkstra exports:', Object.keys(dijkstraModule.instance.exports));
 
-        // Load Ran2025 WASM
-        const ran2025Response = await fetch('algorithms/build/wasm/ran2025.wasm');
-        const ran2025Buffer = await ran2025Response.arrayBuffer();
-        ran2025Module = await WebAssembly.instantiate(ran2025Buffer);
+        // Load Ran2025 WASM using instantiateStreaming
+        ran2025Module = await WebAssembly.instantiateStreaming(
+            fetch('algorithms/build/wasm/ran2025.wasm')
+        );
         console.log('Ran2025 exports:', Object.keys(ran2025Module.instance.exports));
 
         console.log('WASM modules loaded successfully');
