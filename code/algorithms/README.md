@@ -4,13 +4,18 @@ This directory contains C3 implementations of shortest path algorithms compiled 
 
 ## Files
 
+- **common.c3** - Shared data structures and priority queue implementation
+  - Edge struct, constants (MAX_NODES, MAX_EDGES, INFINITY_VAL)
+  - Binary heap priority queue (pq_push, pq_pop functions)
+
 - **dijkstra.c3** - Dijkstra's algorithm with binary heap priority queue
   - Complexity: O((m + n) log n)
   - Classic shortest path algorithm using binary heap
 
-- **ran2025.c3** - Ran et al. (2025) divide-and-conquer algorithm
-  - Complexity: O(m log^(2/3) n)
-  - Frontier reduction with bucket-based processing
+- **ran2025.c3** - Shortest path algorithm (Ran et al. 2025 inspired)
+  - Complexity: O(m log^(2/3) n) theoretical target
+  - Current implementation: Single-source shortest path with binary heap
+  - Future: divide-and-conquer with frontier reduction
 
 - **Makefile** - Build configuration for compiling to WebAssembly
 
@@ -71,7 +76,16 @@ fn void dijkstra_execute(
     Edge* edges,
     int source,
     int target,
-    Result* result
+    float* distances,
+    int* previous,
+    bool* visited,
+    int* adjacency_offset,
+    int* adjacency_count,
+    int* pq_items,
+    float* pq_priorities,
+    int* path,
+    int* pathLength,
+    float* outDistance
 )
 ```
 
@@ -84,7 +98,16 @@ fn void ran2025_execute(
     Edge* edges,
     int source,
     int target,
-    Result* result
+    float* distances,
+    int* previous,
+    bool* visited,
+    int* adjacency_offset,
+    int* adjacency_count,
+    int* pq_items,
+    float* pq_priorities,
+    int* path,
+    int* pathLength,
+    float* outDistance
 )
 ```
 
@@ -116,22 +139,21 @@ const instance = await WebAssembly.instantiate(buffer);
 - Bucket-based processing for pivot selection
 - Includes fallback relaxation for unreached targets
 
-## Metrics Tracked
+## Metrics Tracking
 
-Both algorithms track:
-- **relaxations**: Number of edge weight updates
-- **heapOperations**: Priority queue push/pop count
-- **nodesVisited**: Nodes processed
-- **edgesExamined**: Edges checked
-- **recursiveCalls**: (Ran2025 only) Recursive BMSSP calls
-- **memoryEstimate**: Approximate memory usage in bytes
+Metrics collection has been moved to JavaScript for cleaner separation of concerns:
+- C3 modules focus purely on algorithm implementation (distance computation and path reconstruction)
+- JavaScript layer handles timing measurements and performance analysis
+- This keeps the WebAssembly modules lean and focused on core algorithm logic
 
 ## Compilation Details
 
 The Makefile uses:
-- `--target wasm` - Compile to WebAssembly target
-- `--no-backtrace` - Reduce WASM module size
+- `--target wasm32` - Compile to WebAssembly target
+- `--use-stdlib=no` - No standard library (lightweight modules)
+- `--no-entry` - No main function (library mode)
 - `-O3` (release) or `-O0 -g` (debug) - Optimization levels
+- Compiles all modules together (`*.c3` files) so module imports are resolved
 
 For detailed C3 compiler documentation, see: https://c3-lang.org/
 

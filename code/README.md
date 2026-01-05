@@ -9,7 +9,7 @@ Interactive visualization tool for comparing Single-Source Shortest Path algorit
 - **Multiple Algorithms**:
   - Dijkstra with Binary Heap - O((m + n) log n)
   - Ran et al. (2025) - O(m log^(2/3) n) inspired divide-and-conquer
-- **Performance Metrics**: Detailed statistics including execution time, relaxations, heap operations
+- **Performance Metrics**: Execution time comparison for algorithm analysis
 - **Algorithm Comparison**: Run all algorithms and compare side-by-side
 
 ## Usage
@@ -25,7 +25,7 @@ Interactive visualization tool for comparing Single-Source Shortest Path algorit
 ### JavaScript (Web Interface)
 - `index.html` - Main HTML structure
 - `graph.js` - Graph data structure, MinHeap, PriorityQueue
-- `algorithms.js` - Algorithm implementations with metrics
+- `algorithms.js` - WASM algorithm interface and bridge
 - `app.js` - Main application logic and UI
 - `styles.css` - Dark theme styling
 

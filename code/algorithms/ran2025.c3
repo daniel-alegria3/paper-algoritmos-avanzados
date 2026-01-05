@@ -17,16 +17,8 @@ fn void ran2025_execute(
     float* pq_priorities,
     int* path,
     int* pathLength,
-    float* outDistance,
-    common::Metrics* outMetrics
+    float* outDistance
 ) @export {
-    common::Metrics metrics;
-    metrics.heapOperations = 0;
-    metrics.nodesVisited = 0;
-    metrics.edgesExamined = 0;
-    metrics.relaxations = 0;
-    metrics.recursiveCalls = 0;
-
     // Initialize
     for (int i = 0; i < nodeCount; i++) {
         distances[i] = (i == source) ? 0.0f : common::INFINITY_VAL;
@@ -44,8 +36,6 @@ fn void ran2025_execute(
 
         if (visited[current]) continue;
         visited[current] = true;
-        metrics.nodesVisited++;
-        metrics.recursiveCalls++;
 
         if (current == target) break;
 
@@ -59,7 +49,6 @@ fn void ran2025_execute(
             
             int neighbor = edges[edgeIdx].to;
             float weight = edges[edgeIdx].weight;
-            metrics.edgesExamined++;
 
             if (!visited[neighbor]) {
                 float newDist = distances[current] + weight;
@@ -68,7 +57,6 @@ fn void ran2025_execute(
                     distances[neighbor] = newDist;
                     previous[neighbor] = current;
                     common::pq_push(pq_items, pq_priorities, &pq_size, neighbor, newDist);
-                    metrics.relaxations++;
                 }
             }
         }
@@ -95,7 +83,4 @@ fn void ran2025_execute(
             path[i] = pq_items[idx - 1 - i];
         }
     }
-
-    *outMetrics = metrics;
-    outMetrics.memoryEstimate = (nodeCount + edgeCount) * 32;
 }

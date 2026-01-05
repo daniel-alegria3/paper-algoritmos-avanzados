@@ -7,14 +7,6 @@ class AlgorithmResult {
         this.path = [];
         this.distance = Infinity;
         this.executionTime = 0;
-        this.metrics = {
-            relaxations: 0,
-            heapOperations: 0,
-            nodesVisited: 0,
-            edgesExamined: 0,
-            recursiveCalls: 0,
-            memoryEstimate: 0
-        };
     }
 }
 
@@ -145,23 +137,13 @@ function allocateMemoryInWasm(wasmModule, edges, nodeCount, adjacencyOffset, adj
 }
 
 // Helper: Read result and path from WASM memory
-function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount) {
+function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, nodeCount) {
     const memory = wasmModule.instance.exports.memory;
     const buffer = new DataView(memory.buffer);
     
     try {
         // Read output values
         const distance = buffer.getFloat32(outDistanceOffset, true);
-        
-        // Read metrics struct (5 ints)
-        const metrics = {
-            relaxations: buffer.getInt32(outMetricsOffset, true),
-            heapOperations: buffer.getInt32(outMetricsOffset + 4, true),
-            nodesVisited: buffer.getInt32(outMetricsOffset + 8, true),
-            edgesExamined: buffer.getInt32(outMetricsOffset + 12, true),
-            recursiveCalls: buffer.getInt32(outMetricsOffset + 16, true),
-            memoryEstimate: buffer.getInt32(outMetricsOffset + 20, true)
-        };
         
         // Read path array
         const path = [];
@@ -170,21 +152,13 @@ function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffse
             path.push(buffer.getInt32(pathOffset + i * 4, true));
         }
         
-        return { distance, pathLength, path, metrics };
+        return { distance, pathLength, path };
     } catch (error) {
         console.error('Error reading result from WASM memory:', error);
         return {
             distance: Infinity,
             pathLength: 0,
-            path: [],
-            metrics: {
-                relaxations: 0,
-                heapOperations: 0,
-                nodesVisited: 0,
-                edgesExamined: 0,
-                recursiveCalls: 0,
-                memoryEstimate: 0
-            }
+            path: []
         };
     }
 }
@@ -219,8 +193,7 @@ function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexit
         
         // Allocate output parameter locations
         const outDistanceOffset = pathOffset + nodeCount * 4;
-        const outMetricsOffset = outDistanceOffset + 4;
-        const pathLengthOffset = outMetricsOffset + 24;
+        const pathLengthOffset = outDistanceOffset + 4;
         
         const memory = wasmModule.instance.exports.memory;
         const buffer = new DataView(memory.buffer);
@@ -247,8 +220,7 @@ function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexit
             pqPrioritiesOffset,
             pathOffset,
             pathLengthOffset,
-            outDistanceOffset,
-            outMetricsOffset
+            outDistanceOffset
         );
         
         const endTime = performance.now();
@@ -257,7 +229,7 @@ function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexit
         const pathLength = buffer.getInt32(pathLengthOffset, true);
         
         // Read result from WASM memory
-        const wasmResult = readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
+        const wasmResult = readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, nodeCount);
         
         // Map path indices back to original node IDs (not counted in execution time)
         const indexToNodeId = new Map([...nodeIdToIndex].map(([id, idx]) => [idx, id]));
@@ -265,7 +237,6 @@ function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexit
         
         result.path = mappedPath;
         result.distance = wasmResult.distance;
-        result.metrics = wasmResult.metrics;
         result.executionTime = endTime - startTime;
         
         console.log(`${logPrefix} result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);

@@ -10,15 +10,6 @@ struct Edge {
     float weight;
 }
 
-struct Metrics {
-    int relaxations;
-    int heapOperations;
-    int nodesVisited;
-    int edgesExamined;
-    int recursiveCalls;
-    int memoryEstimate;
-}
-
 fn void pq_push(int* items, float* priorities, int* size, int item, float priority) {
     if (*size >= 100000) return;
 
