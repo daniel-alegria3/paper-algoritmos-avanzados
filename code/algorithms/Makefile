@@ -31,12 +31,12 @@ $(WASM_DIR):
 	@mkdir -p $(WASM_DIR)
 
 # Build Dijkstra WebAssembly module
-$(WASM_DIR)/dijkstra.wasm: dijkstra.c3 $(WASM_DIR)
-	$(C3C) compile dijkstra.c3 $(WASM_FLAGS) $(CFLAGS) --no-entry -o $(WASM_DIR)/dijkstra
+$(WASM_DIR)/dijkstra.wasm: dijkstra.c3 common.c3 $(WASM_DIR)
+	$(C3C) compile dijkstra.c3 common.c3 $(WASM_FLAGS) $(CFLAGS) --no-entry -o $(WASM_DIR)/dijkstra
 
 # Build Ran2025 WebAssembly module
-$(WASM_DIR)/ran2025.wasm: ran2025.c3 $(WASM_DIR)
-	$(C3C) compile ran2025.c3 $(WASM_FLAGS) $(CFLAGS) --no-entry -o $(WASM_DIR)/ran2025
+$(WASM_DIR)/ran2025.wasm: ran2025.c3 common.c3 $(WASM_DIR)
+	$(C3C) compile ran2025.c3 common.c3 $(WASM_FLAGS) $(CFLAGS) --no-entry -o $(WASM_DIR)/ran2025
 
 # Clean build artifacts
 clean:

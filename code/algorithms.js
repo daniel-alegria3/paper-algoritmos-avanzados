@@ -189,12 +189,12 @@ function readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffse
     }
 }
 
-// Dijkstra using C3 WebAssembly
-function dijkstra(graph, source, target) {
-    const result = new AlgorithmResult('Dijkstra (Binary Heap)', 'O((m + n) log n)');
+// Generic WASM algorithm wrapper
+function runWasmAlgorithm(wasmModule, wasmFunctionName, algorithmName, complexity, graph, source, target, logPrefix) {
+    const result = new AlgorithmResult(algorithmName, complexity);
     
-    if (!dijkstraModule) {
-        throw new Error('Dijkstra WASM module not loaded');
+    if (!wasmModule) {
+        throw new Error(`${algorithmName} WASM module not loaded`);
     }
     
     try {
@@ -211,119 +211,28 @@ function dijkstra(graph, source, target) {
             throw new Error(`Invalid source or target node ID`);
         }
         
-        console.log(`Running Dijkstra with ${nodeCount} nodes, ${edgeCount} edges`);
+        console.log(`Running ${logPrefix} with ${nodeCount} nodes, ${edgeCount} edges`);
         
         // Allocate memory (not counted in execution time)
         const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
-            = allocateMemoryInWasm(dijkstraModule, edges, nodeCount, adjacencyOffset, adjacencyCount);
+            = allocateMemoryInWasm(wasmModule, edges, nodeCount, adjacencyOffset, adjacencyCount);
         
         // Allocate output parameter locations
         const outDistanceOffset = pathOffset + nodeCount * 4;
         const outMetricsOffset = outDistanceOffset + 4;
         const pathLengthOffset = outMetricsOffset + 24;
         
-        const memory = dijkstraModule.instance.exports.memory;
+        const memory = wasmModule.instance.exports.memory;
         const buffer = new DataView(memory.buffer);
         buffer.setInt32(pathLengthOffset, 0, true);
         
         // Start timer just before WASM execution
         const startTime = performance.now();
         
-        // Call WASM function
-        const dijkstraExecute = dijkstraModule.instance.exports.dijkstra__dijkstra_execute;
+        // Call WASM function dynamically
+        const wasmFunction = wasmModule.instance.exports[wasmFunctionName];
         
-        dijkstraExecute(
-            nodeCount,
-            edgeCount,
-            edgesOffset,           // Pointer to edges
-            sourceIdx,
-            targetIdx,
-            distancesOffset,       // Pointer to distances
-            previousOffset,        // Pointer to previous
-            visitedOffset,         // Pointer to visited
-            adjacencyOffsetWasmOffset,    // Pointer to adjacency_offset
-            adjacencyCountWasmOffset,     // Pointer to adjacency_count
-            pqItemsOffset,         // Pointer to pq_items
-            pqPrioritiesOffset,    // Pointer to pq_priorities
-            pathOffset,            // Pointer to path
-            pathLengthOffset,      // Pointer to pathLength
-            outDistanceOffset,     // Pointer to outDistance
-            outMetricsOffset       // Pointer to outMetrics
-        );
-        
-        const endTime = performance.now();
-        
-        // Read path length
-        const pathLength = buffer.getInt32(pathLengthOffset, true);
-        
-        // Read result from WASM memory
-        const wasmResult = readResultFromWasm(dijkstraModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
-        
-        // Map path indices back to original node IDs (not counted in execution time)
-        const indexToNodeId = new Map([...nodeIdToIndex].map(([id, idx]) => [idx, id]));
-        const mappedPath = wasmResult.path.map(idx => indexToNodeId.get(idx));
-        
-        result.path = mappedPath;
-        result.distance = wasmResult.distance;
-        result.metrics = wasmResult.metrics;
-        result.executionTime = endTime - startTime;
-        
-        console.log(`Dijkstra result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);
-        
-    } catch (error) {
-        console.error('Error in dijkstra WASM call:', error);
-        result.distance = Infinity;
-        result.path = [];
-        result.executionTime = 0;
-    }
-    
-    return result;
-}
-
-// Ran et al. 2025 using C3 WebAssembly
-function ran2025Algorithm(graph, source, target) {
-    const result = new AlgorithmResult('Ran et al. (2025)', 'O(m log^(2/3) n)');
-    
-    if (!ran2025Module) {
-        throw new Error('Ran2025 WASM module not loaded');
-    }
-    
-    try {
-        // Build node mapping and edges (not counted in execution time)
-        const { nodeIdToIndex, edges, adjacencyOffset, adjacencyCount } = buildNodeMappingAndEdges(graph);
-        const nodeCount = graph.nodeCount;
-        const edgeCount = edges.length;
-        
-        // Map source and target to indices
-        const sourceIdx = nodeIdToIndex.get(source);
-        const targetIdx = nodeIdToIndex.get(target);
-        
-        if (sourceIdx === undefined || targetIdx === undefined) {
-            throw new Error(`Invalid source or target node ID`);
-        }
-        
-        console.log(`Running Ran2025 with ${nodeCount} nodes, ${edgeCount} edges`);
-        
-        // Allocate memory (not counted in execution time)
-        const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
-            = allocateMemoryInWasm(ran2025Module, edges, nodeCount, adjacencyOffset, adjacencyCount);
-        
-        // Allocate output parameter locations
-        const outDistanceOffset = pathOffset + nodeCount * 4;
-        const outMetricsOffset = outDistanceOffset + 4;
-        const pathLengthOffset = outMetricsOffset + 28;  // 7 ints for metrics
-        
-        const memory = ran2025Module.instance.exports.memory;
-        const buffer = new DataView(memory.buffer);
-        buffer.setInt32(pathLengthOffset, 0, true);
-        
-        // Start timer just before WASM execution
-        const startTime = performance.now();
-        
-        // Call WASM function
-        const ran2025Execute = ran2025Module.instance.exports.ran2025__ran2025_execute;
-        
-        ran2025Execute(
+        wasmFunction(
             nodeCount,
             edgeCount,
             edgesOffset,
@@ -332,6 +241,8 @@ function ran2025Algorithm(graph, source, target) {
             distancesOffset,
             previousOffset,
             visitedOffset,
+            adjacencyOffsetWasmOffset,
+            adjacencyCountWasmOffset,
             pqItemsOffset,
             pqPrioritiesOffset,
             pathOffset,
@@ -346,7 +257,7 @@ function ran2025Algorithm(graph, source, target) {
         const pathLength = buffer.getInt32(pathLengthOffset, true);
         
         // Read result from WASM memory
-        const wasmResult = readResultFromWasm(ran2025Module, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
+        const wasmResult = readResultFromWasm(wasmModule, pathOffset, pathLength, outDistanceOffset, outMetricsOffset, nodeCount);
         
         // Map path indices back to original node IDs (not counted in execution time)
         const indexToNodeId = new Map([...nodeIdToIndex].map(([id, idx]) => [idx, id]));
@@ -357,16 +268,44 @@ function ran2025Algorithm(graph, source, target) {
         result.metrics = wasmResult.metrics;
         result.executionTime = endTime - startTime;
         
-        console.log(`Ran2025 result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);
+        console.log(`${logPrefix} result: distance=${result.distance}, pathLength=${result.path.length}, time=${result.executionTime.toFixed(3)}ms`);
         
     } catch (error) {
-        console.error('Error in ran2025 WASM call:', error);
+        console.error(`Error in ${logPrefix} WASM call:`, error);
         result.distance = Infinity;
         result.path = [];
         result.executionTime = 0;
     }
     
     return result;
+}
+
+// Dijkstra using C3 WebAssembly
+function dijkstra(graph, source, target) {
+    return runWasmAlgorithm(
+        dijkstraModule,
+        'dijkstra__dijkstra_execute',
+        'Dijkstra (Binary Heap)',
+        'O((m + n) log n)',
+        graph,
+        source,
+        target,
+        'Dijkstra'
+    );
+}
+
+// Ran et al. 2025 using C3 WebAssembly
+function ran2025Algorithm(graph, source, target) {
+    return runWasmAlgorithm(
+        ran2025Module,
+        'ran2025__ran2025_execute',
+        'Ran et al. (2025)',
+        'O(m log^(2/3) n)',
+        graph,
+        source,
+        target,
+        'Ran2025'
+    );
 }
 
 // Algorithm registry
