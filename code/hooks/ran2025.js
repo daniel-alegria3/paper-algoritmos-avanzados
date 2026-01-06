@@ -2,7 +2,7 @@
 
 let ran2025Module = null;
 
-// Helper: Allocate memory in WASM for edges and working arrays (Ran2025)
+// Helper: Allocate memory in WASM for edges and working arrays (Ran2025 with frontier reduction)
 function allocateMemoryInWasmRan2025(wasmModule, edges, nodeCount, adjacencyOffset, adjacencyCount) {
     const memory = wasmModule.instance.exports.memory;
     const edgeSize = 12; // int(4) + int(4) + float(4) = 12 bytes
@@ -14,18 +14,21 @@ function allocateMemoryInWasmRan2025(wasmModule, edges, nodeCount, adjacencyOffs
         throw new Error(`Invalid nodeCount (${nodeCount}) or edges length (${edges.length})`);
     }
     
-    // Calculate required sizes (with extra space for algorithm working memory)
+    // Calculate required sizes (with extra space for Ran2025 frontier reduction algorithm)
     const edgesMemory = edges.length * edgeSize;
     const adjacencyOffsetMemory = nodeCount * 4; // int array
     const adjacencyCountMemory = nodeCount * 4; // int array
     const distancesMemory = nodeCount * 8; // float (doubled for safety)
     const previousMemory = nodeCount * 8; // int (doubled for safety)
     const visitedMemory = nodeCount * 4; // bool (quadrupled for safety)
-    const pqItemsMemory = nodeCount * 8; // int (doubled for safety)
-    const pqPrioritiesMemory = nodeCount * 8; // float (doubled for safety)
+    const pqItemsMemory = nodeCount * 16; // int (4x for frontier reduction tracking)
+    const pqPrioritiesMemory = nodeCount * 16; // float (4x for frontier reduction tracking)
     const pathMemory = nodeCount * 16; // int array (allocate more for longer paths)
+    // Additional buffers for pivot selection and frontier tracking
+    const weightsBufferMemory = nodeCount * 8; // float array for weight sorting
+    const indicesBufferMemory = nodeCount * 8; // int array for index mapping
     
-    const totalRequired = offset + edgesMemory + adjacencyOffsetMemory + adjacencyCountMemory + distancesMemory + previousMemory + visitedMemory + pqItemsMemory + pqPrioritiesMemory + pathMemory;
+    const totalRequired = offset + edgesMemory + adjacencyOffsetMemory + adjacencyCountMemory + distancesMemory + previousMemory + visitedMemory + pqItemsMemory + pqPrioritiesMemory + pathMemory + weightsBufferMemory + indicesBufferMemory;
     
     // Grow memory if needed (with safety margin of 2x)
     const currentMemoryPages = memory.buffer.byteLength / 65536;
@@ -33,7 +36,7 @@ function allocateMemoryInWasmRan2025(wasmModule, edges, nodeCount, adjacencyOffs
     if (requiredPages > currentMemoryPages) {
         memory.grow(requiredPages - currentMemoryPages);
     }
-    console.log(`Memory: current=${currentMemoryPages} pages, required=${requiredPages} pages, totalRequired=${totalRequired} bytes`);
+    console.log(`Memory (Ran2025): current=${currentMemoryPages} pages, required=${requiredPages} pages, totalRequired=${totalRequired} bytes (includes frontier reduction buffers)`);
     
     const buffer = new DataView(memory.buffer);
     
@@ -62,6 +65,8 @@ function allocateMemoryInWasmRan2025(wasmModule, edges, nodeCount, adjacencyOffs
     const pqItemsOffset = visitedOffset + visitedMemory;
     const pqPrioritiesOffset = pqItemsOffset + pqItemsMemory;
     const pathOffset = pqPrioritiesOffset + pqPrioritiesMemory;
+    const weightsBufferOffset = pathOffset + pathMemory;
+    const indicesBufferOffset = weightsBufferOffset + weightsBufferMemory;
     
     // Initialize arrays to zero
     for (let i = 0; i < distancesMemory; i += 4) {
@@ -74,7 +79,7 @@ function allocateMemoryInWasmRan2025(wasmModule, edges, nodeCount, adjacencyOffs
         buffer.setUint8(visitedOffset + i, 0);
     }
     
-    return { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset };
+    return { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset, weightsBufferOffset, indicesBufferOffset };
 }
 
 // Ran2025 WASM algorithm wrapper
@@ -110,7 +115,7 @@ function runWasmAlgorithmRan2025(nodeIdToIndex, edges, adjacencyOffset, adjacenc
         console.log(`Running Ran2025 with ${nodeCount} nodes, ${edgeCount} edges`);
         
         // Allocate memory (not counted in execution time)
-        const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset } 
+        const { edgesOffset, adjacencyOffsetWasmOffset, adjacencyCountWasmOffset, distancesOffset, previousOffset, visitedOffset, pqItemsOffset, pqPrioritiesOffset, pathOffset, weightsBufferOffset, indicesBufferOffset } 
             = allocateMemoryInWasmRan2025(ran2025Module, edges, nodeCount, adjacencyOffset, adjacencyCount);
         
         // Allocate output parameter locations (must match pathMemory size in allocateMemoryInWasm)
