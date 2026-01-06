@@ -30,25 +30,19 @@ Segundo contenido, etc.
 
 // --- TÍTULO PRINCIPAL ---
 = 4. MARCO TEÓRICO
-
-Esta sección formaliza los fundamentos matemáticos y computacionales que sustentan el
-análisis comparativo. Se describen las estructuras algebraicas de los grafos, las
-limitaciones teóricas de los enfoques clásicos y los nuevos paradigmas algorítmicos
-(deterministas, combinatorios y asíncronos) que fundamentan los algoritmos de última
-generación evaluados en este estudio.
-
 // --- SECCIÓN A ---
 == *Fundamentos de Teoría de Grafos*
 
 === Definición Formal y Ponderación
-Una red de transporte se modela como un grafo dirigido $G = (V, E, w)$.
+Una red de transporte se modela como un grafo dirigido $G = (V, E, w)$
+@eswiki:grafos.
 
 - *Vértices ($V$):* Conjunto finito de nodos con cardinalidad $n = |V|$.
 - *Aristas ($E$):* Conjunto de pares ordenados $(u, v)$ que representan conexiones
   directas, con cardinalidad $m = |E|$.
 - *Función de Peso ($w$):* Mapeo $w: E -> RR$ que asigna un costo a cada arista.
 
-En el contexto de Duan et al. (2025) y Dijkstra, se asume $w(e) >= 0$. En el contexto de
+En el contexto de Duan et al. (2025) @ran2025 y Dijkstra, se asume $w(e) >= 0$. En el contexto de
 Bernstein et al. (2025), se permite $w(e) < 0$, siempre que no existan ciclos negativos
 alcanzables desde la fuente.
 
@@ -58,14 +52,14 @@ define la densidad del grafo como $D = m / (n(n-1))$.
 
 Las redes de transporte se clasifican como *grafos dispersos* (sparse graphs), donde
 $m = O(n)$ o $m << n^2$. Esta propiedad topológica es la premisa fundamental para el
-algoritmo de Duan et al., cuya complejidad $O(m log^(2/3) n)$ explota la baja
+algoritmo de Duan et al. @ran2025, cuya complejidad $O(m log^(2/3) n)$ explota la baja
 conectividad promedio para superar a los enfoques clásicos.
 
 // --- SECCIÓN B ---
 == *El Estándar Clásico y la "Barrera de Ordenamiento"*
 
 === Principio de Relajación (Dijkstra)
-El algoritmo de Dijkstra se basa en la propiedad de subestructura óptima y la relajación
+El algoritmo de Dijkstra @enwiki:dijkstra de basa en la propiedad de subestructura óptima y la relajación
 de aristas. Para un nodo $v$, se mantiene una cota superior $d[v]$ de la distancia más
 corta desde la fuente $s$. La relajación de una arista $(u, v)$ actualiza esta cota:
 
@@ -90,7 +84,7 @@ los principios matemáticos que permiten a los nuevos algoritmos romper las barr
 clásicas.
 
 === Reducción de Frontera (Paradigma de Duan et al.)
-El algoritmo de Duan et al. (2025) supera la barrera de ordenamiento mediante la técnica
+El algoritmo de Duan et al. (2025) @ran2025 supera la barrera de ordenamiento mediante la técnica
 de *Reducción de Frontera* (Frontier Reduction).
 
 - *Concepto:* En lugar de mantener un orden total de todos los vértices activos en una
@@ -103,7 +97,7 @@ de *Reducción de Frontera* (Frontier Reduction).
 - *Complejidad Resultante:* $O(m log^(2/3) n)$.
 
 === Reponderación vía Funciones de Precio (Paradigma de Bernstein et al.)
-Para grafos con pesos negativos, Bernstein et al. (2025) utilizan un enfoque
+Para grafos con pesos negativos, Bernstein et al. (2025) @bernstein2025 utilizan un enfoque
 combinatorio basado en *Funciones de Precio* (Price Functions), inspirado en el
 algoritmo de Johnson.
 
@@ -119,7 +113,7 @@ algoritmo de Johnson.
   pesos positivos resolubles con variantes de Dijkstra.
 
 === Asincronía y Ejecución Especulativa (Paradigma de Rao et al.)
-En el contexto de alto rendimiento, Rao et al. (2024) desafían el modelo síncrono (donde
+En el contexto de alto rendimiento, Rao et al. (2024) @rao2024 desafían el modelo síncrono (donde
 todos los procesadores esperan en barreras).
 
 - *$Delta$-Stepping:* Los algoritmos paralelos clásicos dividen las distancias en

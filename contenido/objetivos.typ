@@ -28,7 +28,5 @@ aplicabilidad práctica.
   determinista para su evaluación experimental en grafos dispersos y densos.
 - Realizar análisis comparativo de rendimiento centrado en el tiempo de ejecución de CPU
   y la escalabilidad al aumentar el número de nodos ($n$) y aristas ($m$).
-- Revisar y sintetizar al menos 16 artículos científicos recientes sobre algoritmos
-  SSSP, enfatizando avances en la optimización para grafos dispersos.
 - Evaluar críticamente las limitaciones y aplicaciones potenciales de estos algoritmos
   en escenarios de redes de transporte con pesos estáticos.

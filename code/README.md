@@ -20,37 +20,59 @@ Interactive visualization tool for comparing Single-Source Shortest Path algorit
 4. Click "Select Nodes" and click on two nodes (source and target)
 5. Choose an algorithm and click "Run Algorithm"
 
-## Files
+## Project Structure
 
-### JavaScript (Web Interface)
+### Web Interface
 - `index.html` - Main HTML structure
-- `graph.js` - Graph data structure, MinHeap, PriorityQueue
-- `algorithms.js` - Core WASM algorithm interface and coordination
-- `app.js` - Main application logic and UI
+- `app.js` - Main application logic and UI management
+- `graph.js` - Graph data structure, MinHeap, PriorityQueue implementations
 - `styles.css` - Dark theme styling
 
-### Algorithm Hooks
-- `hooks/dijkstra.js` - Dijkstra-specific WASM setup, memory allocation, and execution
-- `hooks/ran2025.js` - Ran2025-specific WASM setup, memory allocation, and execution
+### Algorithm Integration
+- `algorithms.js` - Algorithm registry and WASM interface coordination
+- `hooks/` - WASM module initialization and execution
+  - `dijkstra.js` - Dijkstra algorithm execution hook
+  - `ran2025.js` - Ran2025 algorithm execution hook
 
 ### C3 / WebAssembly (High-Performance Implementations)
 - `algorithms/` - C3 implementations compiled to WebAssembly
-  - `dijkstra.c3` - Dijkstra algorithm (O((m + n) log n))
-  - `ran2025.c3` - Ran et al. (2025) algorithm (O(m log^(2/3) n))
+  - `dijkstra.c3` - Dijkstra algorithm with binary heap priority queue
+  - `ran2025.c3` - Ran et al. (2025) inspired algorithm
+  - `common.c3` - Shared data structures and priority queue implementation
   - `Makefile` - Build configuration for WebAssembly compilation
-  - `README.md` - Detailed documentation for C3 implementations
+  - `build/` - Compiled WebAssembly modules
+
+## Architecture
+
+The project uses a hybrid architecture for optimal performance:
+
+1. **JavaScript Layer** (`app.js`, `algorithms.js`) - Handles UI, graph loading, and algorithm coordination
+2. **WASM Hooks** (`hooks/`) - Manages WebAssembly module initialization, memory allocation, and parameter marshaling
+3. **High-Performance Core** (`algorithms/`) - C3 algorithms compiled to WebAssembly for fast computation
+
+## Building WebAssembly Modules
+
+From the `algorithms/` directory:
+
+```bash
+make                    # Build all modules (release mode)
+make BUILD_TYPE=debug   # Build with debug symbols
+make dijkstra          # Build specific algorithm
+make clean             # Clean build artifacts
+```
+
+Requires C3 compiler (c3c) version 1.0+
 
 ## Adding New Algorithms
 
-Register new algorithms in `algorithms.js`:
+To add a new algorithm:
 
-```javascript
-registerAlgorithm('myAlgorithm', function(graph, source, target) {
-    const result = new AlgorithmResult('My Algorithm', 'O(...)');
-    // Implementation
-    return result;
-}, 'My Algorithm Name', 'Description');
-```
+1. Implement in C3: Create `algorithms/myalgorithm.c3` with function `void myalgorithm_execute(...)`
+2. Create hook: Add `hooks/myalgorithm.js` with `initializeMyalgorithmModule()` function
+3. Register: In `algorithms.js`, call:
+   ```javascript
+   registerAlgorithm('myalgorithm', myalgorithmFunction, 'My Algorithm Name', 'Description');
+   ```
 
 ## Based on Research
 
