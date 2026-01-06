@@ -2,10 +2,7 @@
 
 ## Descripción
 
-Este proyecto evalúa empíricamente el desempeño del algoritmo de Dijkstra contra
-un algoritmo determinista con complejidad O(m log^(2/3) n) (Ran et al., 2025) en
-grafos dispersos que representan redes de transporte público. El estudio utiliza
-datos geográficos reales de Cusco, Perú.
+Este proyecto evalúa empíricamente el desempeño del algoritmo de Dijkstra contra un algoritmo determinista con complejidad O(m log^(2/3) n) (Ran et al., 2025) en grafos dispersos que representan redes de transporte público. El estudio utiliza datos geográficos reales de Cusco, Perú.
 
 ## Resultados Principales
 
@@ -13,6 +10,23 @@ datos geográficos reales de Cusco, Perú.
 - Dijkstra produce caminos **18% más cortos**
 - A mayor complejidad del grafo, la ventaja de Dijkstra se acentúa
 - Los beneficios teóricos del nuevo algoritmo no se materializan a la escala urbana típica
+
+## Experimentación y Análisis de Resultados
+
+Se ejecutaron los algoritmos en una zona de fácil prueba, con un terreno plano sin muchas irregularidades. Cada prueba comenzó con distancias cortas e incrementó progresivamente hasta alcanzar aproximadamente 300 kilómetros.
+
+### Resultados de Rendimiento
+
+| Algoritmo | Tiempo (ms) |
+|-----------|------------|
+| Dijkstra (Binary Heap) | 41.38 |
+| Ran et al. (2025) | 46.15 |
+
+![Comparación de tiempo, distancia y nro. de nodos de los algoritmos](./contenido/imgs/algo_comparacion_grafico.png)
+
+Los resultados obtenidos en las 13 pruebas realizadas muestran un comportamiento
+consistente de ambos algoritmos, permitiendo una comparación clara de su
+eficiencia en diferentes escenarios de complejidad creciente.
 
 ## Conclusión
 
