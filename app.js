@@ -595,13 +595,6 @@ class GraphVisualizer {
             <p><strong>Algorithm:</strong> ${result.algorithm}</p>
             <p><strong>Complexity:</strong> ${result.complexity}</p>
             <p><strong>Time:</strong> ${result.executionTime.toFixed(3)} ms</p>
-            <hr>
-            <p><strong>Nodes Visited:</strong> ${result.metrics.nodesVisited}</p>
-            <p><strong>Edges Examined:</strong> ${result.metrics.edgesExamined}</p>
-            <p><strong>Relaxations:</strong> ${result.metrics.relaxations}</p>
-            <p><strong>Heap Ops:</strong> ${result.metrics.heapOperations}</p>
-            ${result.metrics.recursiveCalls > 0 ? `<p><strong>Recursive Calls:</strong> ${result.metrics.recursiveCalls}</p>` : ''}
-            <p><strong>Memory Est.:</strong> ${formatBytes(result.metrics.memoryEstimate)}</p>
         `;
     }
 
@@ -629,21 +622,21 @@ class GraphVisualizer {
         performanceDisplay.innerHTML = '<p>See comparison below</p>';
 
         let comparisonHTML = '<table class="comparison-table"><thead><tr>' +
-            '<th>Algorithm</th><th>Time (ms)</th><th>Nodes</th><th>Edges</th><th>Relaxations</th></tr></thead><tbody>';
+            '<th>Algorithm</th><th>Time (ms)</th><th>Path Length</th><th>Distance</th></tr></thead><tbody>';
 
         const fastestTime = Math.min(...results.map(r => r.executionTime));
 
         for (const result of results) {
             const isFastest = result.executionTime === fastestTime;
             const speedup = result.executionTime > 0 ? (result.executionTime / fastestTime).toFixed(2) : '-';
+            const distanceKm = (result.distance / 1000).toFixed(2);
 
             comparisonHTML += `
                 <tr${isFastest ? ' class="fastest"' : ''}>
                     <td>${result.algorithm}</td>
                     <td>${result.executionTime.toFixed(3)} ${isFastest ? '⚡' : `(${speedup}x)`}</td>
-                    <td>${result.metrics.nodesVisited}</td>
-                    <td>${result.metrics.edgesExamined}</td>
-                    <td>${result.metrics.relaxations}</td>
+                    <td>${result.path.length}</td>
+                    <td>${distanceKm} km</td>
                 </tr>
             `;
         }
@@ -716,6 +709,13 @@ function formatBytes(bytes) {
     return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-    new GraphVisualizer();
+document.addEventListener('DOMContentLoaded', async () => {
+    // Initialize WASM modules before creating the visualizer
+    try {
+        await initializeWasmModules();
+        new GraphVisualizer();
+    } catch (error) {
+        console.error('Failed to initialize WASM modules:', error);
+        alert('Failed to load algorithm modules. Please refresh the page.');
+    }
 });
