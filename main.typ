@@ -8,3 +8,4 @@
 #include "./contenido/metodologia.typ"
 #include "./contenido/experimentacion.typ"
 #include "./contenido/conclusiones.typ"
+#include "./contenido/anexos.typ"

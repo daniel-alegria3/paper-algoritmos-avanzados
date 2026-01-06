@@ -1,11 +1,6 @@
 = Metodología
-
 Esta investigación compara experimentalmente el rendimiento de dos algoritmos de caminos
 mínimos en redes de transporte mediante una arquitectura híbrida JavaScript-WASM.
-
-El codigo fuente de la implementacion del codigo esta en
-https://github.com/daniel-alegria3/paper-algoritmos-avanzados/tree/main/code y este se
-puede probar en vivo en https://daniel-alegria3.github.io/paper-algoritmos-avanzados/
 
 == Entorno Experimental (Hardware y Software)
 Dado que el rendimiento de los algoritmos de grafos es altamente dependiente de la
