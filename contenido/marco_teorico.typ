@@ -27,181 +27,127 @@ Aquí debe llenar tu contenido
 Segundo contenido, etc.
 */
 
-= Marco Teórico
-Esta sección describe los fundamentos matemáticos y computacionales necesarios para el
-análisis de la optimización de rutas. Se abordan conceptos relacionados con la teoría de
-grafos aplicada a redes de transporte, la definición formal del problema de caminos
-mínimos y la clasificación de los algoritmos deterministas según su complejidad
-asintótica en el modelo de comparación y suma.
 
-== Modelado de Redes de Transporte mediante Grafos
+// --- TÍTULO PRINCIPAL ---
+= 4. MARCO TEÓRICO
 
-La abstracción matemática de una red de transporte público es un requisito fundamental
-para la aplicación de algoritmos de optimización. En el contexto de esta investigación,
-el sistema se modela formalmente como un *grafo dirigido y ponderado*, denotado por la
-terna $G = (V, E, w)$.
+Esta sección formaliza los fundamentos matemáticos y computacionales que sustentan el
+análisis comparativo. Se describen las estructuras algebraicas de los grafos, las
+limitaciones teóricas de los enfoques clásicos y los nuevos paradigmas algorítmicos
+(deterministas, combinatorios y asíncronos) que fundamentan los algoritmos de última
+generación evaluados en este estudio.
 
-A continuación, se detallan los componentes de este modelo algebraico:
+// --- SECCIÓN A ---
+== *Fundamentos de Teoría de Grafos*
 
-+ *Conjunto de Vértices ($V$):* Representa los puntos de interés discretos dentro de la
-  red. En el dominio del transporte público, cada vértice $v_i in V$ corresponde a una
-  entidad física georreferenciada, tal como un paradero de autobús, una estación de
-  metro o una intersección vial crítica. La cardinalidad del conjunto se denota como
-  $n = |V|$, definiendo el tamaño del espacio de búsqueda en términos de locaciones.
+=== Definición Formal y Ponderación
+Una red de transporte se modela como un grafo dirigido $G = (V, E, w)$.
 
-+ *Conjunto de Aristas ($E$):* Representa las conexiones directas entre los vértices.
-  Dado que el flujo del transporte tiene un sentido específico (rutas de ida y vuelta o
-  calles de sentido único), $E$ se define como un subconjunto del producto cartesiano
-  $V times V$. Cada arista es un par ordenado $e = (u, v) in E$, que indica la
-  existencia de un tramo transitable directamente desde el nodo $u$ hacia el nodo $v$.
-  La cardinalidad de este conjunto es $m = |E|$.
+- *Vértices ($V$):* Conjunto finito de nodos con cardinalidad $n = |V|$.
+- *Aristas ($E$):* Conjunto de pares ordenados $(u, v)$ que representan conexiones
+  directas, con cardinalidad $m = |E|$.
+- *Función de Peso ($w$):* Mapeo $w: E -> RR$ que asigna un costo a cada arista.
 
-+ *Función de Peso ($w$):* Para resolver el problema de caminos mínimos, es necesario
-  cuantificar el "costo" de transitar por una arista. Se define una función de
-  ponderación no negativa $w: E -> RR^+ union {0}$. El valor $w(u, v)$ representa la
-  impedancia del arco, la cual puede modelar:
-  - La distancia física (en kilómetros).
-  - El tiempo de viaje esperado (considerando velocidad promedio).
-  - El costo monetario del trayecto.
+En el contexto de Duan et al. (2025) y Dijkstra, se asume $w(e) >= 0$. En el contexto de
+Bernstein et al. (2025), se permite $w(e) < 0$, siempre que no existan ciclos negativos
+alcanzables desde la fuente.
 
-  La condición de no negatividad ($w(e) >= 0$) es una restricción teórica necesaria para
-  garantizar la corrección del algoritmo de Dijkstra (1959), el cual no procesa
-  correctamente ciclos negativos.
+=== Densidad y Esparcimiento
+La eficiencia de los algoritmos modernos depende de la relación entre $m$ y $n$. Se
+define la densidad del grafo como $D = m / (n(n-1))$.
 
-=== Topología y Densidad del Grafo
-Un aspecto crítico para el análisis de complejidad computacional en este proyecto es la
-*densidad del grafo*. Las redes de transporte urbano exhiben una topología particular
-que las diferencia de otros tipos de redes (como las redes sociales o redes web).
+Las redes de transporte se clasifican como *grafos dispersos* (sparse graphs), donde
+$m = O(n)$ o $m << n^2$. Esta propiedad topológica es la premisa fundamental para el
+algoritmo de Duan et al., cuya complejidad $O(m log^(2/3) n)$ explota la baja
+conectividad promedio para superar a los enfoques clásicos.
 
-Se clasifican matemáticamente como *grafos dispersos* (_sparse graphs_). Esta propiedad
-implica que el número de aristas $m$ es proporcional al número de nodos $n$, cumpliendo
-la condición asintótica:
+// --- SECCIÓN B ---
+== *El Estándar Clásico y la "Barrera de Ordenamiento"*
 
-$ m << n^2 $
+=== Principio de Relajación (Dijkstra)
+El algoritmo de Dijkstra se basa en la propiedad de subestructura óptima y la relajación
+de aristas. Para un nodo $v$, se mantiene una cota superior $d[v]$ de la distancia más
+corta desde la fuente $s$. La relajación de una arista $(u, v)$ actualiza esta cota:
 
-En una red de transporte real, un paradero específico solo está conectado físicamente
-con sus paraderos adyacentes inmediatos (el anterior y el siguiente en la ruta), y no
-con todos los demás paraderos de la ciudad. Por lo tanto, el *grado promedio* de los
-nodos es bajo y constante, independientemente del tamaño total de la ciudad.
+$ d[v] arrow.l min(d[v], d[u] + w(u, v)) $
 
-Esta característica es la justificación central para comparar el algoritmo de Dijkstra,
-cuya complejidad es $O(m + n log n)$, frente a nuevos avances teóricos diseñados
-específicamente para grafos dispersos con complejidad $O(m log^(2/3) n)$. En grafos
-densos (donde $m approx n^2$), la ventaja de los algoritmos de complejidad subóptima se
-diluiría; sin embargo, en la topología dispersa del transporte público, la reducción en
-el término logarítmico promete una optimización significativa en el tiempo de
-procesamiento de trayectorias.
+El algoritmo garantiza la optimalidad al seleccionar siempre el nodo con la menor $d[v]$
+tentativa usando una cola de prioridad.
 
-== Problema del Camino Más Corto con Fuente Única (SSSP)
+=== La Barrera de Ordenamiento (Sorting Barrier)
+Históricamente, se conjeturó que resolver SSSP en grafos dirigidos requería ordenar los
+vértices por su distancia, imponiendo una cota inferior de $Omega(n log n)$ en el modelo
+de comparación. Esta limitación teórica, conocida como la "Barrera de Ordenamiento",
+sugiere que ningún algoritmo determinista podría ser más rápido que el tiempo necesario
+para ordenar los nodos. La complejidad clásica $O(m + n log n)$ de Dijkstra refleja esta
+barrera.
 
-El problema SSSP (_Single-Source Shortest Path_) constituye el núcleo algorítmico de los
-sistemas de navegación y planificación de transporte. Formalmente, dado un grafo
-$G=(V, E, w)$ y un nodo origen distinguido $s in V$, el objetivo es determinar una ruta
-$P$ hacia cada nodo destino $v in V$ tal que la suma de los pesos de sus aristas
-constituyentes sea mínima.
+// --- SECCIÓN C ---
+== *Nuevos Paradigmas Algorítmicos*
 
-Una *trayectoria* o camino desde el vértice $v_0$ hasta $v_k$ se define como una
-secuencia de vértices $P = angle.l v_0, v_1, ..., v_k angle.r$ tal que
-$(v_(i-1), v_i) in E$ para todo $i=1, ..., k$. El costo total de dicha trayectoria,
-denotado como $w(P)$, es la suma de los costos de sus enlaces individuales:
+Para fundamentar la comparación de rendimientos en este proyecto, es necesario definir
+los principios matemáticos que permiten a los nuevos algoritmos romper las barreras
+clásicas.
 
-$ w(P) = sum_(i=1)^k w(v_(i-1), v_i) $
+=== Reducción de Frontera (Paradigma de Duan et al.)
+El algoritmo de Duan et al. (2025) supera la barrera de ordenamiento mediante la técnica
+de *Reducción de Frontera* (Frontier Reduction).
 
-La distancia del camino más corto desde el origen $s$ hasta un vértice $v$, denotada por
-$delta(s, v)$, se define como el mínimo costo posible entre todas las trayectorias
-existentes que conectan $s$ con $v$. Si no existe camino, la distancia se considera
-infinita:
+- *Concepto:* En lugar de mantener un orden total de todos los vértices activos en una
+  cola de prioridad global, el algoritmo identifica un conjunto reducido de vértices
+  "pivote" que aproximan la geometría del grafo.
+- *Mecanismo:* El problema SSSP se reduce a problemas más pequeños denominados _Bounded
+  Multi-Source Shortest Path_ (BMSSP). Matemáticamente, esto permite disminuir el tamaño
+  de la frontera activa por un factor polinomial en cada nivel de recursión, evitando el
+  costo logarítmico completo ($log n$) asociado al ordenamiento de nodos no críticos.
+- *Complejidad Resultante:* $O(m log^(2/3) n)$.
 
-$
-  delta(s, v) = cases(
-    min {w(P) : s arrow.squiggly v} & "si existe camino",
-    infinity & "en caso contrario"
-  )
-$
+=== Reponderación vía Funciones de Precio (Paradigma de Bernstein et al.)
+Para grafos con pesos negativos, Bernstein et al. (2025) utilizan un enfoque
+combinatorio basado en *Funciones de Precio* (Price Functions), inspirado en el
+algoritmo de Johnson.
 
-En el contexto de esta investigación, la restricción de pesos no negativos
-($w(u,v) >= 0$) es axiomática, dado que variables físicas como el tiempo o la distancia
-no pueden adoptar valores negativos. Esta propiedad es la que habilita el uso de
-algoritmos de enfoque voraz como Dijkstra, descartando la necesidad de algoritmos más
-costosos como Bellman-Ford.
+- *Definición:* Una función de precio es un mapeo $phi: V -> RR$. Se define el "peso
+  reducido" de una arista como:
+  $ w_phi (u, v) = w(u, v) + phi(u) - phi(v) $
 
-== Algoritmos Clásicos: El Estándar de Dijkstra
+  Si $phi$ es factible, entonces $w_phi (u, v) >= 0$ para toda arista.
 
-Propuesto originalmente por Edsger W. Dijkstra en 1959, este algoritmo se ha consolidado
-como el método determinista estándar para resolver el SSSP en grafos sin pesos
-negativos. Su funcionamiento se basa en una estrategia voraz (_greedy_) que mantiene un
-conjunto $S$ de vértices cuya distancia final mínima desde la fuente ya ha sido
-determinada.
+- *Innovación:* El algoritmo utiliza una *Descomposición de Bajo Diámetro* (Low-Diameter
+  Decomposition) para calcular estas funciones $phi$ de manera eficiente y casi-lineal,
+  permitiendo transformar el problema de pesos negativos en una serie de instancias de
+  pesos positivos resolubles con variantes de Dijkstra.
 
-=== Mecanismo de Relajación
-El principio fundamental que gobierna la convergencia del algoritmo es la *relajación de
-aristas*. Para cada nodo $v$, se mantiene un atributo $d[v]$ que representa la cota
-superior de la distancia del camino más corto hallado hasta el momento. La relajación de
-una arista $(u, v)$ consiste en verificar si es posible mejorar el camino hacia $v$
-pasando a través de $u$:
+=== Asincronía y Ejecución Especulativa (Paradigma de Rao et al.)
+En el contexto de alto rendimiento, Rao et al. (2024) desafían el modelo síncrono (donde
+todos los procesadores esperan en barreras).
 
-$
-  "Si " d[v] > d[u] + w(u, v) arrow.r cases(
-    d[v] = d[u] + w(u, v),
-    pi[v] = u
-  )
-$
+- *$Delta$-Stepping:* Los algoritmos paralelos clásicos dividen las distancias en
+  "cubos" de ancho $Delta$. Los nodos en el cubo $[i Delta, (i+1) Delta]$ se procesan en
+  paralelo.
+- *Control Adaptativo (ACIC):* Rao introduce la *Introspección Continua*. En lugar de
+  barreras rígidas, el algoritmo monitorea métricas globales (histogramas de actividad)
+  para permitir la *Ejecución Especulativa*: procesar nodos de cubos futuros antes de
+  terminar el actual. Esto introduce el riesgo de "trabajo desperdiciado" (re-cálculos
+  de nodos si llega una mejor ruta tarde), pero matemáticamente se demuestra que, con
+  umbrales adaptativos, la ganancia en paralelismo supera al costo del retrabajo.
 
-Donde $pi[v]$ denota el predecesor de $v$ en el árbol de caminos mínimos. El algoritmo
-selecciona iterativamente el nodo $u in V - S$ con el menor valor de $d[u]$, lo añade a
-$S$ y relaja todas sus aristas salientes.
+// --- SECCIÓN D ---
+== *Métricas de Evaluación de Rendimiento*
 
-=== Análisis de Complejidad Computacional
-La eficiencia del algoritmo de Dijkstra depende críticamente de la estructura de datos
-utilizada para implementar la cola de prioridad que gestiona los vértices no visitados.
-Se distinguen dos implementaciones principales relevantes para este estudio:
+Para comparar objetivamente estos algoritmos heterogéneos, se definen las siguientes
+métricas:
 
-+ *Implementación con Montículos Binarios (_Binary Heaps_):*
-  Es la implementación más común en librerías estándar. Las operaciones de extracción
-  del mínimo y actualización de claves toman tiempo logarítmico. Su complejidad total es
-  $O(m log n)$. En grafos dispersos (donde $m approx n$), esto es muy eficiente, pero el
-  factor $log n$ se aplica a todas las aristas.
+- *Tiempo de Ejecución ($T$):* Tiempo de reloj (_Wall-clock time_) desde el inicio hasta
+  la convergencia del algoritmo.
+- *Speedup ($S$):* Relación de mejora de velocidad del nuevo algoritmo ($T_("new")$)
+  respecto a la línea base de Dijkstra ($T_("base")$):
+  $ S = T_("base") / T_("new") $
+- *Eficiencia de Trabajo:* Medida del número total de operaciones elementales
+  (relajaciones de aristas) realizadas. En algoritmos especulativos (como el de Rao), la
+  eficiencia disminuye si hay mucho retrabajo, aunque el tiempo total mejore por
+  paralelismo.
+- *Escalabilidad:* Capacidad del algoritmo para mantener su rendimiento al incrementar
+  $n$ y $m$. Se evalúa observando la curva de crecimiento de $T$ en función del tamaño
+  del grafo.
 
-+ *Implementación con Montículos de Fibonacci (_Fibonacci Heaps_):*
-  Teóricamente más avanzada, permite realizar la operación de disminución de clave
-  (_decrease-key_) en tiempo amortizado constante $O(1)$. Esto reduce la complejidad
-  asintótica a:
-  $ O(m + n log n) $
-
-Este análisis es crucial para la justificación del proyecto: en grafos extremadamente
-masivos y dispersos, incluso el término $log n$ asociado a $n$ puede ser significativo.
-La propuesta de comparar esta línea base contra algoritmos de complejidad
-$O(m log^(2/3) n)$ busca demostrar si la reducción en el exponente logarítmico se
-traduce en una ventaja tangible para la ingeniería de transporte a gran escala.
-
-== Algoritmos de Complejidad Subóptima y Avances Recientes
-
-En las últimas décadas, la investigación teórica se ha centrado en romper la barrera del
-tiempo lineal en modelos de computación específicos. Recientemente, se han desarrollado
-algoritmos deterministas en el modelo de *comparación y suma* que logran tiempos de
-ejecución más ajustados para grafos dispersos.
-
-El algoritmo objeto de estudio en esta investigación presenta una complejidad de:
-
-$ O(m log^(2/3) n) $
-
-Este avance teórico es significativo porque, matemáticamente, $log^(2/3) n$ crece más
-lentamente que $log n$. Por lo tanto, en escenarios donde el número de nodos $n$ es
-masivo y la red es dispersa, este algoritmo supera teóricamente a la implementación
-clásica de Dijkstra, representando el estado del arte en algoritmos deterministas para
-este dominio específico.
-
-== Métricas de Evaluación de Rendimiento
-
-Para validar la aplicabilidad práctica de los algoritmos teóricos en sistemas de
-ingeniería real, se deben considerar dos dimensiones de análisis:
-
-- *Complejidad Asintótica (Teórica):* Evaluación del comportamiento del algoritmo
-  mediante la notación Big-O ($O$), analizando cómo escala el número de operaciones
-  elementales a medida que $n$ y $m$ tienden al infinito.
-
-- *Tiempo de Ejecución (Empírica):* Medición del tiempo de CPU (en milisegundos)
-  requerido para calcular las rutas en grafos de prueba. Esta métrica es sensible a las
-  constantes ocultas en la notación Big-O y a la arquitectura del hardware, siendo
-  crucial para determinar si la ventaja teórica es perceptible en aplicaciones de la
-  vida real como la planificación de itinerarios de transporte.
