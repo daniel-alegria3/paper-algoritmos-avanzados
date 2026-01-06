@@ -47,7 +47,7 @@ Arquitectura híbrida JavaScript + WASM (C3 compilado) sin librerías externas:
 
 === Algoritmo de Dijkstra (Línea Base)
 Versión estándar en C3 con Binary Heap:
-- *Heap:* Compilado en WASM (`common.c3`) para `extract-min` en $O(\\log n)$.
+- *Heap:* Compilado en WASM (`common.c3`) para `extract-min` en $O(log n)$.
 - *Memoria:* Arreglos pre-asignados en memoria lineal WASM (distancias, visitados,
   precedentes, cola).
 - *Adyacencia:* Índices compactos (`adjacency_offset`, `adjacency_count`) para acceso
