@@ -1,80 +1,80 @@
-# SSSP Algorithm Visualizer
+# Visualizador de Algoritmos SSSP
 
-Interactive visualization tool for comparing Single-Source Shortest Path algorithms on OpenStreetMap.
+Herramienta interactiva para comparar algoritmos de camino más corto con fuente única (SSSP) en OpenStreetMap.
 
-## Features
+## Características
 
-- **OpenStreetMap Integration**: Select any region on the map to generate a graph
-- **Interactive Node Selection**: Click on the map to select source and target nodes
-- **Multiple Algorithms**:
-  - Dijkstra with Binary Heap - O((m + n) log n)
-  - Ran et al. (2025) - O(m log^(2/3) n) inspired divide-and-conquer
-- **Performance Metrics**: Execution time comparison for algorithm analysis
-- **Algorithm Comparison**: Run all algorithms and compare side-by-side
+- **Integración con OpenStreetMap**: Selecciona cualquier región en el mapa para generar un grafo
+- **Selección Interactiva de Nodos**: Haz clic en el mapa para seleccionar nodos de origen y destino
+- **Múltiples Algoritmos**:
+  - Dijkstra con Heap Binario - O((m + n) log n)
+  - Ran et al. (2025) - O(m log^(2/3) n) inspirado en divide-y-conquista
+- **Métricas de Rendimiento**: Comparación de tiempos de ejecución para análisis de algoritmos
+- **Comparación de Algoritmos**: Ejecuta todos los algoritmos y compáralos lado a lado
 
-## Usage
+## Uso
 
-1. Open `index.html` in a modern web browser
-2. Click "Select Region" and drag on the map to define the graph area
-3. Adjust the number of nodes and edge density as desired
-4. Click "Select Nodes" and click on two nodes (source and target)
-5. Choose an algorithm and click "Run Algorithm"
+1. Abre `index.html` en un navegador web moderno
+2. Haz clic en "Seleccionar Región" y arrastra en el mapa para definir el área del grafo
+3. Ajusta el número de nodos y la densidad de aristas según sea necesario
+4. Haz clic en "Seleccionar Nodos" y selecciona dos nodos (origen y destino)
+5. Elige un algoritmo y haz clic en "Ejecutar Algoritmo"
 
-## Project Structure
+## Estructura del Proyecto
 
-### Web Interface
-- `index.html` - Main HTML structure
-- `app.js` - Main application logic and UI management
-- `graph.js` - Graph data structure, MinHeap, PriorityQueue implementations
-- `styles.css` - Dark theme styling
+### Interfaz Web
+- `index.html` - Estructura HTML principal
+- `app.js` - Lógica principal de la aplicación y gestión de la interfaz
+- `graph.js` - Estructura de datos de grafo, implementaciones de MinHeap y PriorityQueue
+- `styles.css` - Estilos de tema oscuro
 
-### Algorithm Integration
-- `algorithms.js` - Algorithm registry and WASM interface coordination
-- `hooks/` - WASM module initialization and execution
-  - `dijkstra.js` - Dijkstra algorithm execution hook
-  - `ran2025.js` - Ran2025 algorithm execution hook
+### Integración de Algoritmos
+- `algorithms.js` - Registro de algoritmos y coordinación de interfaz WASM
+- `hooks/` - Inicialización y ejecución de módulos WASM
+  - `dijkstra.js` - Hook de ejecución del algoritmo de Dijkstra
+  - `ran2025.js` - Hook de ejecución del algoritmo Ran2025
 
-### C3 / WebAssembly (High-Performance Implementations)
-- `algorithms/` - C3 implementations compiled to WebAssembly
-  - `dijkstra.c3` - Dijkstra algorithm with binary heap priority queue
-  - `ran2025.c3` - Ran et al. (2025) inspired algorithm
-  - `common.c3` - Shared data structures and priority queue implementation
-  - `Makefile` - Build configuration for WebAssembly compilation
-  - `build/` - Compiled WebAssembly modules
+### C3 / WebAssembly (Implementaciones de Alto Rendimiento)
+- `algorithms/` - Implementaciones en C3 compiladas a WebAssembly
+  - `dijkstra.c3` - Algoritmo de Dijkstra con cola de prioridad de heap binario
+  - `ran2025.c3` - Algoritmo inspirado en Ran et al. (2025)
+  - `common.c3` - Estructuras de datos compartidas e implementación de cola de prioridad
+  - `Makefile` - Configuración de construcción para compilación a WebAssembly
+  - `build/` - Módulos WebAssembly compilados
 
-## Architecture
+## Arquitectura
 
-The project uses a hybrid architecture for optimal performance:
+El proyecto utiliza una arquitectura híbrida para un rendimiento óptimo:
 
-1. **JavaScript Layer** (`app.js`, `algorithms.js`) - Handles UI, graph loading, and algorithm coordination
-2. **WASM Hooks** (`hooks/`) - Manages WebAssembly module initialization, memory allocation, and parameter marshaling
-3. **High-Performance Core** (`algorithms/`) - C3 algorithms compiled to WebAssembly for fast computation
+1. **Capa JavaScript** (`app.js`, `algorithms.js`) - Gestiona la interfaz, carga de grafos y coordinación de algoritmos
+2. **Hooks WASM** (`hooks/`) - Gestiona inicialización de módulos WebAssembly, asignación de memoria y serialización de parámetros
+3. **Núcleo de Alto Rendimiento** (`algorithms/`) - Algoritmos en C3 compilados a WebAssembly para computación rápida
 
-## Building WebAssembly Modules
+## Construir Módulos WebAssembly
 
-From the `algorithms/` directory:
+Desde el directorio `algorithms/`:
 
 ```bash
-make                    # Build all modules (release mode)
-make BUILD_TYPE=debug   # Build with debug symbols
-make dijkstra          # Build specific algorithm
-make clean             # Clean build artifacts
+make                    # Construir todos los módulos (modo release)
+make BUILD_TYPE=debug   # Construir con símbolos de depuración
+make dijkstra          # Construir algoritmo específico
+make clean             # Limpiar artefactos de construcción
 ```
 
-Requires C3 compiler (c3c) version 1.0+
+Requiere compilador C3 (c3c) versión 1.0+
 
-## Adding New Algorithms
+## Agregar Nuevos Algoritmos
 
-To add a new algorithm:
+Para agregar un nuevo algoritmo:
 
-1. Implement in C3: Create `algorithms/myalgorithm.c3` with function `void myalgorithm_execute(...)`
-2. Create hook: Add `hooks/myalgorithm.js` with `initializeMyalgorithmModule()` function
-3. Register: In `algorithms.js`, call:
+1. Implementar en C3: Crea `algorithms/mialgoritmo.c3` con función `void mialgoritmo_execute(...)`
+2. Crear hook: Agrega `hooks/mialgoritmo.js` con función `initializeMialgoritmoModule()`
+3. Registrar: En `algorithms.js`, llama a:
    ```javascript
-   registerAlgorithm('myalgorithm', myalgorithmFunction, 'My Algorithm Name', 'Description');
+   registerAlgorithm('mialgoritmo', mialgoritmFunction, 'Mi Nombre de Algoritmo', 'Descripción');
    ```
 
-## Based on Research
+## Basado en Investigación
 
 - Ran et al. (2025): "Shortest Paths in O(m log^(2/3) n) Time"
-- Implements concepts: divide-and-conquer, frontier reduction, BMSSP
+- Implementa conceptos: divide-y-conquista, reducción de frontera, BMSSP
